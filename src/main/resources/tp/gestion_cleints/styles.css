@@ -1,0 +1,117 @@
+/* Modern Dark Theme */
+.root {
+    -fx-base: #1e1e2e;
+    -fx-background-color: #1e1e2e;
+    -fx-font-family: 'Segoe UI', sans-serif;
+}
+
+/* Sidebar */
+.sidebar {
+    -fx-background-color: #252538;
+    -fx-padding: 20;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10, 0, 0, 0);
+}
+
+.title-label {
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-padding: 0 0 20 0;
+}
+
+/* Statistics Cards */
+.stat-card {
+    -fx-background-color: #313244;
+    -fx-background-radius: 10;
+    -fx-padding: 15;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 0);
+}
+
+.stat-title {
+    -fx-text-fill: #a6adc8;
+    -fx-font-size: 14px;
+}
+
+.stat-value {
+    -fx-text-fill: #89b4fa;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+}
+
+/* Table View */
+.table-view {
+    -fx-background-color: transparent;
+    -fx-base: #1e1e2e; /* Fix for table header background */
+    -fx-control-inner-background: #1e1e2e;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: #313244;
+}
+
+.table-view .column-header, .table-view .filler {
+    -fx-background-color: transparent;
+    -fx-size: 40px;
+    -fx-border-color: transparent transparent #45475a transparent;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: #cdd6f4;
+    -fx-font-weight: bold;
+}
+
+.table-row-cell {
+    -fx-background-color: #1e1e2e;
+    -fx-border-color: transparent transparent #313244 transparent;
+}
+
+.table-row-cell:odd {
+    -fx-background-color: #232336;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: #45475a;
+}
+
+.table-cell {
+    -fx-text-fill: #cdd6f4;
+    -fx-alignment: CENTER-LEFT;
+}
+
+/* Form Inputs */
+.text-field, .text-area {
+    -fx-background-color: #313244;
+    -fx-text-fill: #cdd6f4;
+    -fx-prompt-text-fill: #6c7086;
+    -fx-background-radius: 5;
+    -fx-border-radius: 5;
+    -fx-border-color: transparent;
+}
+
+.text-field:focused, .text-area:focused {
+    -fx-border-color: #89b4fa;
+}
+
+/* Buttons */
+.button {
+    -fx-background-color: #89b4fa;
+    -fx-text-fill: #1e1e2e;
+    -fx-font-weight: bold;
+    -fx-background-radius: 5;
+    -fx-cursor: hand;
+    -fx-padding: 8 15 8 15;
+}
+
+.button:hover {
+    -fx-background-color: #b4befe;
+}
+
+.button-danger {
+    -fx-background-color: #f38ba8;
+}
+
+.button-danger:hover {
+    -fx-background-color: #eba0ac;
+}
