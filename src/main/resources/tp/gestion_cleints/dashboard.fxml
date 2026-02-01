@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.chart.*?>
+
+<ScrollPane xmlns="http://javafx.com/javafx/8.0.171" 
+            xmlns:fx="http://javafx.com/fxml/1" 
+            fx:controller="tp.gestion_cleints.DashboardController" 
+            fitToWidth="true" fitToHeight="true"
+            stylesheets="@styles.css">
+
+    <VBox styleClass="content-area" spacing="30">
+        <Label text="%dashboard.title" styleClass="section-header"/>
+        
+        <HBox spacing="30">
+            <VBox styleClass="stat-card" minWidth="200" HBox.hgrow="ALWAYS">
+                <Label text="%stats.total_clients" styleClass="stat-title"/>
+                <Label fx:id="totalClientsLabel" text="0" styleClass="stat-value"/>
+            </VBox>
+            
+            <VBox styleClass="stat-card" minWidth="200" HBox.hgrow="ALWAYS">
+                <Label text="%stats.total_revenue" styleClass="stat-title"/>
+                <Label fx:id="totalRevenueLabel" text="0.00 MAD" styleClass="stat-value"/>
+            </VBox>
+            
+            <VBox styleClass="stat-card" minWidth="200" HBox.hgrow="ALWAYS">
+                <Label text="%stats.avg_revenue" styleClass="stat-title"/>
+                <Label fx:id="avgRevenueLabel" text="0.00 MAD" styleClass="stat-value"/>
+            </VBox>
+            
+            <VBox styleClass="stat-card" minWidth="200" HBox.hgrow="ALWAYS">
+                <Label text="%stats.top_client" styleClass="stat-title"/>
+                <Label fx:id="topClientLabel" text="-" styleClass="stat-value" style="-fx-font-size: 20px;"/>
+            </VBox>
+        </HBox>
+
+        <HBox spacing="30">
+            <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+                <Label text="%chart.revenue" styleClass="stat-title"/>
+                <BarChart fx:id="revenueChart" prefHeight="300">
+                    <xAxis>
+                        <CategoryAxis label="%form.name"/>
+                    </xAxis>
+                    <yAxis>
+                        <NumberAxis label="%form.revenue"/>
+                    </yAxis>
+                </BarChart>
+            </VBox>
+
+            <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" minWidth="300">
+                <Label text="%table.recent_clients" styleClass="stat-title"/>
+                <TableView fx:id="recentClientsTable" prefHeight="300">
+                    <columns>
+                        <TableColumn fx:id="recentNameColumn" text="%form.name" prefWidth="150"/>
+                        <TableColumn fx:id="recentRevenueColumn" text="%form.revenue" prefWidth="100"/>
+                    </columns>
+                    <columnResizePolicy>
+                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+                    </columnResizePolicy>
+                </TableView>
+            </VBox>
+        </HBox>
+    </VBox>
+</ScrollPane>

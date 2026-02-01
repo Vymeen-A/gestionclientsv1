@@ -6,14 +6,35 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
 public class HelloApplication extends Application {
     @Override
     public void start(Stage stage) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("hello-view.fxml"));
-        Scene scene = new Scene(fxmlLoader.load(), 1000, 700);
-        stage.setTitle("Gestion Client - Dashboard");
+        // Initialize DB
+        DatabaseManager.initializeDatabase();
+        new UserDAO().ensureAdminExists("admin"); // Default password on first run
+
+        ResourceBundle bundle = ResourceBundle.getBundle("tp.gestion_cleints.messages", Locale.getDefault());
+        FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("login.fxml"));
+        fxmlLoader.setResources(bundle);
+        Scene scene = new Scene(fxmlLoader.load());
+        stage.setTitle("Login - Gestion Clients");
         stage.setScene(scene);
+
+        // Set application icon
+        try {
+            stage.getIcons().add(new javafx.scene.image.Image(
+                    getClass().getResourceAsStream("images/logo.png")));
+        } catch (Exception e) {
+            System.err.println("Could not load application icon: " + e.getMessage());
+        }
+
         stage.show();
+    }
+
+    public static void main(String[] args) {
+        launch();
     }
 }

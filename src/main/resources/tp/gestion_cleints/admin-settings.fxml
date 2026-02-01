@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<ScrollPane fitToWidth="true" styleClass="content-pane" stylesheets="@styles.css" xmlns:fx="http://javafx.com/fxml" fx:controller="tp.gestion_cleints.AdminSettingsController">
+    <VBox spacing="20" style="-fx-padding: 30;">
+        <Label text="%admin.title" styleClass="section-header"/>
+        
+        <VBox spacing="15" styleClass="stat-card" style="-fx-padding: 25;">
+            <Label text="%admin.section.identity" styleClass="stat-title" style="-fx-font-size: 18;"/>
+            <GridPane hgap="20" vgap="15">
+                <columnConstraints>
+                    <ColumnConstraints percentWidth="50"/>
+                    <ColumnConstraints percentWidth="50"/>
+                </columnConstraints>
+                
+                <VBox spacing="5" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                    <Label text="%admin.raison_sociale" styleClass="summary-label-title"/>
+                    <TextField fx:id="raisonSocialeField" promptText="e.g. My Company SARL"/>
+                </VBox>
+                
+                <VBox spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                    <Label text="%admin.nom_prenom" styleClass="summary-label-title"/>
+                    <TextField fx:id="nomPrenomField" promptText="e.g. John Doe"/>
+                </VBox>
+            </GridPane>
+        </VBox>
+        
+        <VBox spacing="15" styleClass="stat-card" style="-fx-padding: 25;">
+            <Label text="%admin.section.location" styleClass="stat-title" style="-fx-font-size: 18;"/>
+            <GridPane hgap="20" vgap="15">
+                <columnConstraints>
+                    <ColumnConstraints percentWidth="70"/>
+                    <ColumnConstraints percentWidth="30"/>
+                </columnConstraints>
+                
+                <VBox spacing="5" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                    <Label text="%admin.adresse" styleClass="summary-label-title"/>
+                    <TextField fx:id="adresseField"/>
+                </VBox>
+                
+                <VBox spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                    <Label text="%admin.ville" styleClass="summary-label-title"/>
+                    <TextField fx:id="villeField"/>
+                </VBox>
+            </GridPane>
+        </VBox>
+        
+        <VBox spacing="15" styleClass="stat-card" style="-fx-padding: 25;">
+            <Label text="%admin.section.legal" styleClass="stat-title" style="-fx-font-size: 18;"/>
+            <GridPane hgap="20" vgap="15">
+                <columnConstraints>
+                    <ColumnConstraints percentWidth="33"/>
+                    <ColumnConstraints percentWidth="33"/>
+                    <ColumnConstraints percentWidth="34"/>
+                </columnConstraints>
+                
+                <VBox spacing="5" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                    <Label text="%admin.ice" styleClass="summary-label-title"/>
+                    <TextField fx:id="iceField"/>
+                </VBox>
+                
+                <VBox spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                    <Label text="%admin.rc" styleClass="summary-label-title"/>
+                    <TextField fx:id="rcField"/>
+                </VBox>
+                
+                <VBox spacing="5" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                    <Label text="%admin.tp" styleClass="summary-label-title"/>
+                    <TextField fx:id="tpField"/>
+                </VBox>
+                
+                <VBox spacing="5" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                    <Label text="%admin.identifiant_tva" styleClass="summary-label-title"/>
+                    <TextField fx:id="identifiantTvaField"/>
+                </VBox>
+                
+                <VBox spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                    <Label text="%admin.regime_tva" styleClass="summary-label-title"/>
+                    <ComboBox fx:id="regimeTvaBox" maxWidth="Infinity"/>
+                </VBox>
+            </GridPane>
+        </VBox>
+        
+        <VBox spacing="15" styleClass="stat-card" style="-fx-padding: 25;">
+            <Label text="%admin.section.contact" styleClass="stat-title" style="-fx-font-size: 18;"/>
+            <GridPane hgap="20" vgap="15">
+                <columnConstraints>
+                    <ColumnConstraints percentWidth="50"/>
+                    <ColumnConstraints percentWidth="50"/>
+                </columnConstraints>
+                
+                <VBox spacing="5" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                    <Label text="%admin.email" styleClass="summary-label-title"/>
+                    <TextField fx:id="emailField"/>
+                </VBox>
+                
+                <VBox spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                    <Label text="%admin.phone" styleClass="summary-label-title"/>
+                    <TextField fx:id="phoneField"/>
+                </VBox>
+            </GridPane>
+        </VBox>
+        
+        <HBox alignment="CENTER_RIGHT" spacing="15">
+            <Button text="%btn.save" fx:id="saveButton" onAction="#handleSave" styleClass="button-primary" prefWidth="150"/>
+        </HBox>
+    </VBox>
+</ScrollPane>

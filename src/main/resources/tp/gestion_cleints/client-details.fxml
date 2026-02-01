@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.geometry.Insets?>
+<?import java.lang.String?>
+
+<ScrollPane xmlns="http://javafx.com/javafx/8.0.171" 
+            xmlns:fx="http://javafx.com/fxml/1" 
+            fx:controller="tp.gestion_cleints.ClientDetailsController" 
+            fitToWidth="true" fitToHeight="true"
+            prefWidth="1050" prefHeight="800"
+            stylesheets="@styles.css">
+
+    <VBox spacing="35" styleClass="content-area" style="-fx-padding: 40;">
+        <HBox spacing="35" VBox.vgrow="ALWAYS">
+            <!-- Main Content Area (Left) -->
+            <VBox spacing="30" HBox.hgrow="ALWAYS">
+                <!-- Header -->
+                <HBox spacing="15" alignment="CENTER_LEFT" style="-fx-padding: 0 0 15 0;">
+                    <ImageView fitHeight="60" fitWidth="60" preserveRatio="true">
+                        <image>
+                            <Image url="@images/for-detailles-window.png"/>
+                        </image>
+                    </ImageView>
+                    <VBox spacing="8">
+                        <Label fx:id="clientNameLabel" text="Client Name" styleClass="section-header" style="-fx-font-size: 32px;"/>
+                        <Label text="%details.subtitle" style="-fx-text-fill: #95a5a6; -fx-font-size: 14px;"/>
+                    </VBox>
+                </HBox>
+
+                <!-- Metrics Row -->
+                <HBox spacing="25">
+                    <VBox styleClass="detail-summary-box" HBox.hgrow="ALWAYS" alignment="CENTER_LEFT" style="-fx-padding: 25;">
+                        <Label text="%details.contract_total" styleClass="summary-label-title" style="-fx-font-size: 11px;"/>
+                        <Label fx:id="fixedAmountLabel" text="0.00 MAD" styleClass="summary-label-value" style="-fx-font-size: 24px;"/>
+                    </VBox>
+                    <VBox HBox.hgrow="ALWAYS" alignment="CENTER_LEFT">
+                        <styleClass>
+                            <String fx:value="detail-summary-box" />
+                            <String fx:value="stat-success" />
+                        </styleClass>
+                        <Label text="%details.payments_total" styleClass="summary-label-title"/>
+                        <Label fx:id="totalPaidLabel" text="0.00 MAD" styleClass="summary-label-value"/>
+                    </VBox>
+                    <VBox HBox.hgrow="ALWAYS" alignment="CENTER_LEFT">
+                        <styleClass>
+                            <String fx:value="detail-summary-box" />
+                            <String fx:value="stat-danger" />
+                        </styleClass>
+                        <Label text="%details.pending_balance" styleClass="summary-label-title"/>
+                        <Label fx:id="remainingLabel" text="0.00 MAD" styleClass="summary-label-value"/>
+                    </VBox>
+                </HBox>
+
+                <!-- Table Card -->
+                <VBox spacing="15" VBox.vgrow="ALWAYS" styleClass="stat-card" style="-fx-padding: 25;">
+                    <HBox alignment="CENTER_LEFT" spacing="15">
+                        <ImageView fitHeight="30" fitWidth="30" preserveRatio="true">
+                            <image>
+                                <Image url="@images/for-add-transaction.png"/>
+                            </image>
+                        </ImageView>
+                        <Label text="%details.transaction_log" styleClass="stat-title"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="%details.btn.download_receipt" onAction="#handleExportReceipt" styleClass="button-action" style="-fx-font-size: 12px;"/>
+                        <Button text="%details.btn.preview_receipt" onAction="#handlePreviewReceipt" styleClass="button-secondary" style="-fx-font-size: 12px;"/>
+                    </HBox>
+                    <TableView fx:id="transactionTable" prefHeight="450" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="dateColumn" text="%details.column.date" prefWidth="130"/>
+                            <TableColumn fx:id="amountColumn" text="%details.column.amount" prefWidth="130"/>
+                            <TableColumn fx:id="notesColumn" text="%details.column.notes" prefWidth="350"/>
+                        </columns>
+                        <columnResizePolicy>
+                            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+                        </columnResizePolicy>
+                    </TableView>
+                </VBox>
+            </VBox>
+
+            <!-- Sidebar Area (Right) -->
+            <VBox spacing="25" prefWidth="300" styleClass="stat-card" style="-fx-padding: 30; -fx-background-color: #ffffff; -fx-border-color: #f1f3f5; -fx-border-width: 0 0 0 1;">
+                <Label text="%details.metadata" styleClass="stat-title" style="-fx-padding: 0 0 15 0;"/>
+                
+                <VBox spacing="20">
+                    <VBox spacing="5">
+                        <Label text="%details.ice_registration" styleClass="summary-label-title" style="-fx-font-size: 10px;"/>
+                        <Label fx:id="clientIceLabel" text="-" style="-fx-font-weight: bold; -fx-text-fill: #2c3e50; -fx-font-size: 15px;"/>
+                    </VBox>
+                </VBox>
+
+                <Separator style="-fx-padding: 10 0;"/>
+
+                <VBox spacing="15">
+                    <Button text="%details.btn.record_payment" onAction="#handleRecordPayment" styleClass="button-primary" maxWidth="Infinity" style="-fx-font-size: 14px; -fx-padding: 12;"/>
+                    <Button text="%details.btn.export_statement" onAction="#handleExportStatement" styleClass="button-action" maxWidth="Infinity" style="-fx-font-size: 14px; -fx-padding: 12;"/>
+                    <Button text="%details.btn.preview_statement" onAction="#handlePreviewStatement" styleClass="button-secondary" maxWidth="Infinity" style="-fx-font-size: 14px; -fx-padding: 12;"/>
+                    <Separator style="-fx-padding: 5 0;"/>
+                    <Button text="%details.btn.edit_entry" onAction="#handleEditTransaction" styleClass="button-secondary" maxWidth="Infinity" style="-fx-padding: 10;"/>
+                    <Button text="%btn.delete" onAction="#handleDeleteTransaction" styleClass="button-danger" maxWidth="Infinity" style="-fx-padding: 10;"/>
+                </VBox>
+
+                <Region VBox.vgrow="ALWAYS"/>
+                
+                <Button text="%details.btn.return" onAction="#handleClose" styleClass="button-secondary" maxWidth="Infinity" style="-fx-font-weight: bold;"/>
+            </VBox>
+        </HBox>
+    </VBox>
+</ScrollPane>

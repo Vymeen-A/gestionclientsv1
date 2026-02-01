@@ -2,21 +2,48 @@ package tp.gestion_cleints;
 
 public class Client {
     private int id;
-    private String name;
+    private String raisonSociale;
+    private String nomPrenom;
+    private String adresse;
+    private String ville;
+    private String ice;
+    private String rc;
+    private String tp;
+    private String taxeHabit;
+    private String tva; // Percentage
+    private String regimeTva;
+    private String fax;
     private String email;
-    private String phone;
-    private String address;
-    private String notes;
-    private double revenue;
+    private String rib;
+    private String password; // Reference password, not for login
+    private String secteur;
+    private String debutAct;
+    private double fixedTotalAmount;
+    private double ttc;
 
-    public Client(int id, String name, String email, String phone, String address, String notes, double revenue) {
+    public Client(int id, String raisonSociale, String nomPrenom, String adresse, String ville,
+            String ice, String rc, String tp, String taxeHabit, String tva,
+            String regimeTva, String fax, String email, String rib,
+            String password, String secteur, String debutAct, double fixedTotalAmount, double ttc) {
         this.id = id;
-        this.name = name;
+        this.raisonSociale = raisonSociale;
+        this.nomPrenom = nomPrenom;
+        this.adresse = adresse;
+        this.ville = ville;
+        this.ice = ice;
+        this.rc = rc;
+        this.tp = tp;
+        this.taxeHabit = taxeHabit;
+        this.tva = tva;
+        this.regimeTva = regimeTva;
+        this.fax = fax;
         this.email = email;
-        this.phone = phone;
-        this.address = address;
-        this.notes = notes;
-        this.revenue = revenue;
+        this.rib = rib;
+        this.password = password;
+        this.secteur = secteur;
+        this.debutAct = debutAct;
+        this.fixedTotalAmount = fixedTotalAmount;
+        this.ttc = ttc;
     }
 
     // Getters and Setters
@@ -28,12 +55,92 @@ public class Client {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
+    public String getRaisonSociale() {
+        return raisonSociale;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setRaisonSociale(String raisonSociale) {
+        this.raisonSociale = raisonSociale;
+    }
+
+    public String getNomPrenom() {
+        return nomPrenom;
+    }
+
+    public void setNomPrenom(String nomPrenom) {
+        this.nomPrenom = nomPrenom;
+    }
+
+    public String getAdresse() {
+        return adresse;
+    }
+
+    public void setAdresse(String adresse) {
+        this.adresse = adresse;
+    }
+
+    public String getVille() {
+        return ville;
+    }
+
+    public void setVille(String ville) {
+        this.ville = ville;
+    }
+
+    public String getIce() {
+        return ice;
+    }
+
+    public void setIce(String ice) {
+        this.ice = ice;
+    }
+
+    public String getRc() {
+        return rc;
+    }
+
+    public void setRc(String rc) {
+        this.rc = rc;
+    }
+
+    public String getTp() {
+        return tp;
+    }
+
+    public void setTp(String tp) {
+        this.tp = tp;
+    }
+
+    public String getTaxeHabit() {
+        return taxeHabit;
+    }
+
+    public void setTaxeHabit(String taxeHabit) {
+        this.taxeHabit = taxeHabit;
+    }
+
+    public String getTva() {
+        return tva;
+    }
+
+    public void setTva(String tva) {
+        this.tva = tva;
+    }
+
+    public String getRegimeTva() {
+        return regimeTva;
+    }
+
+    public void setRegimeTva(String regimeTva) {
+        this.regimeTva = regimeTva;
+    }
+
+    public String getFax() {
+        return fax;
+    }
+
+    public void setFax(String fax) {
+        this.fax = fax;
     }
 
     public String getEmail() {
@@ -44,35 +151,51 @@ public class Client {
         this.email = email;
     }
 
-    public String getPhone() {
-        return phone;
+    public String getRib() {
+        return rib;
     }
 
-    public void setPhone(String phone) {
-        this.phone = phone;
+    public void setRib(String rib) {
+        this.rib = rib;
     }
 
-    public String getAddress() {
-        return address;
+    public String getPassword() {
+        return password;
     }
 
-    public void setAddress(String address) {
-        this.address = address;
+    public void setPassword(String password) {
+        this.password = password;
     }
 
-    public String getNotes() {
-        return notes;
+    public String getSecteur() {
+        return secteur;
     }
 
-    public void setNotes(String notes) {
-        this.notes = notes;
+    public void setSecteur(String secteur) {
+        this.secteur = secteur;
     }
 
-    public double getRevenue() {
-        return revenue;
+    public String getDebutAct() {
+        return debutAct;
     }
 
-    public void setRevenue(double revenue) {
-        this.revenue = revenue;
+    public void setDebutAct(String debutAct) {
+        this.debutAct = debutAct;
+    }
+
+    public double getFixedTotalAmount() {
+        return fixedTotalAmount;
+    }
+
+    public void setFixedTotalAmount(double fixedTotalAmount) {
+        this.fixedTotalAmount = fixedTotalAmount;
+    }
+
+    public double getTtc() {
+        return ttc;
+    }
+
+    public void setTtc(double ttc) {
+        this.ttc = ttc;
     }
 }

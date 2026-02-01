@@ -4,7 +4,7 @@ module tp.gestion_cleints {
     requires java.sql;
     requires org.xerial.sqlitejdbc;
 
-    opens tp.gestion_cleints to javafx.fxml;
+    opens tp.gestion_cleints to javafx.fxml, javafx.base;
 
     exports tp.gestion_cleints;
 }

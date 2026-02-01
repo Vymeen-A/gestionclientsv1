@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.geometry.Insets?>
+
+<ScrollPane xmlns="http://javafx.com/javafx/8.0.171" 
+            xmlns:fx="http://javafx.com/fxml/1" 
+            fx:controller="tp.gestion_cleints.ExpenseController" 
+            fitToWidth="true" fitToHeight="true"
+            stylesheets="@styles.css">
+    
+    <VBox spacing="20" styleClass="content-area">
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <ImageView fitHeight="40" fitWidth="40" preserveRatio="true">
+                <image>
+                    <Image url="@images/for-add-expense.png"/>
+                </image>
+            </ImageView>
+            <Label text="%header.expenses" styleClass="section-header"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="%btn.add_expense" onAction="#handleAddExpense" styleClass="button-primary"/>
+        </HBox>
+
+        <TableView fx:id="expenseTable" prefHeight="400">
+            <columns>
+                <TableColumn fx:id="idColumn" text="%expense.id" prefWidth="50"/>
+                <TableColumn fx:id="dateColumn" text="%expense.date" prefWidth="120"/>
+                <TableColumn fx:id="descriptionColumn" text="%expense.description" prefWidth="300"/>
+                <TableColumn fx:id="amountColumn" text="%expense.amount" prefWidth="120"/>
+            </columns>
+            <columnResizePolicy>
+                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+            </columnResizePolicy>
+        </TableView>
+
+        <HBox spacing="20" alignment="CENTER_RIGHT" styleClass="detail-summary-box" style="-fx-padding: 15;">
+            <Label text="%expense.total" styleClass="summary-label-title"/>
+            <Label fx:id="totalExpensesLabel" text="0.00 MAD" styleClass="summary-label-value" style="-fx-text-fill: #e74c3c;"/>
+        </HBox>
+    </VBox>
+</ScrollPane>

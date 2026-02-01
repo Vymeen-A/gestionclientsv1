@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<ScrollPane xmlns="http://javafx.com/javafx/8.0.171" 
+            xmlns:fx="http://javafx.com/fxml/1" 
+            fx:controller="tp.gestion_cleints.ClientListController" 
+            fitToWidth="true" fitToHeight="true"
+            stylesheets="@styles.css">
+
+    <VBox styleClass="content-area" spacing="20">
+        <HBox alignment="CENTER_LEFT" spacing="20">
+            <Label text="%header.clients" styleClass="section-header"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <TextField fx:id="searchField" promptText="%search.prompt" prefWidth="300"/>
+        </HBox>
+        
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Button text="%btn.add_client" onAction="#handleAddClient" styleClass="button-primary"/>
+            <Button text="%btn.edit" onAction="#handleEditClient" styleClass="button-secondary"/>
+            <Button text="Details" onAction="#handleViewDetails" styleClass="button-secondary"/>
+            <Button text="%btn.delete" onAction="#handleDeleteClient" styleClass="button-danger"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Export Report" onAction="#handleExportPdf" styleClass="button-secondary"/>
+        </HBox>
+
+        <TableView fx:id="clientTable" prefHeight="500">
+            <columns>
+                <TableColumn fx:id="idColumn" text="ID" prefWidth="50"/>
+                <TableColumn fx:id="raisonSocialeColumn" text="Raison Sociale" prefWidth="250"/>
+                <TableColumn fx:id="nomPrenomColumn" text="Nom et Prénom" prefWidth="200"/>
+                <TableColumn fx:id="villeColumn" text="Ville" prefWidth="120"/>
+                <TableColumn fx:id="fixedAmountColumn" text="HT" prefWidth="120"/>
+                <TableColumn fx:id="ttcColumn" text="TTC" prefWidth="120"/>
+            </columns>
+            <columnResizePolicy>
+                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+            </columnResizePolicy>
+        </TableView>
+    </VBox>
+</ScrollPane>

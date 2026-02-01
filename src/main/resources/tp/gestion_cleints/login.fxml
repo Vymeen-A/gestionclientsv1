@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns:fx="http://javafx.com/fxml" 
+      fx:controller="tp.gestion_cleints.LoginController" 
+      alignment="CENTER" spacing="0" 
+      styleClass="root"
+      prefWidth="500" prefHeight="450"
+      stylesheets="@styles.css">
+    
+    <VBox spacing="30" alignment="CENTER" styleClass="stat-card" maxWidth="400" style="-fx-padding: 40;">
+        <VBox spacing="10" alignment="CENTER">
+            <Label text="%login.title" styleClass="section-header" style="-fx-padding: 0;"/>
+            <Label text="%login.header" styleClass="stat-title"/>
+        </VBox>
+        
+        <VBox spacing="15" alignment="CENTER_LEFT">
+            <VBox spacing="5">
+                <Label text="%login.password" styleClass="summary-label-title"/>
+                <PasswordField fx:id="passwordField" promptText="%login.password_prompt" onAction="#handleLogin"/>
+            </VBox>
+        </VBox>
+        
+        <Button text="%login.btn_login" onAction="#handleLogin" styleClass="button-primary" maxWidth="Infinity"/>
+        <Button text="%login.btn_reset" onAction="#handleResetPassword" styleClass="button-secondary" maxWidth="Infinity"/>
+        
+        <Label fx:id="errorLabel" text="" style="-fx-text-fill: #e74c3c; -fx-font-weight: bold;"/>
+    </VBox>
+</VBox>
