@@ -10,15 +10,16 @@ public class FinancialDAO {
         return DatabaseManager.getConnection();
     }
 
-    // Transactions (Payments)
+    // Transactions
     public void addTransaction(Transaction t) {
-        String sql = "INSERT INTO transactions(client_id, amount, date, notes) VALUES(?, ?, ?, ?)";
+        String sql = "INSERT INTO transactions(client_id, amount, date, notes, type) VALUES(?, ?, ?, ?, ?)";
         try (Connection conn = getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, t.getClientId());
             pstmt.setDouble(2, t.getAmount());
             pstmt.setString(3, t.getDate());
             pstmt.setString(4, t.getNotes());
+            pstmt.setString(5, t.getType() != null ? t.getType() : Transaction.TYPE_PAYMENT);
             pstmt.executeUpdate();
         } catch (SQLException e) {
             System.err.println("Error adding transaction: " + e.getMessage());
@@ -26,13 +27,14 @@ public class FinancialDAO {
     }
 
     public void updateTransaction(Transaction t) {
-        String sql = "UPDATE transactions SET amount = ?, date = ?, notes = ? WHERE id = ?";
+        String sql = "UPDATE transactions SET amount = ?, date = ?, notes = ?, type = ? WHERE id = ?";
         try (Connection conn = getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setDouble(1, t.getAmount());
             pstmt.setString(2, t.getDate());
             pstmt.setString(3, t.getNotes());
-            pstmt.setInt(4, t.getId());
+            pstmt.setString(4, t.getType());
+            pstmt.setInt(5, t.getId());
             pstmt.executeUpdate();
         } catch (SQLException e) {
             System.err.println("Error updating transaction: " + e.getMessage());
@@ -58,12 +60,17 @@ public class FinancialDAO {
             pstmt.setInt(1, clientId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
+                    String type = rs.getString("type");
+                    if (type == null)
+                        type = Transaction.TYPE_PAYMENT; // Backward compatibility
+
                     list.add(new Transaction(
                             rs.getInt("id"),
                             rs.getInt("client_id"),
                             rs.getDouble("amount"),
                             rs.getString("date"),
-                            rs.getString("notes")));
+                            rs.getString("notes"),
+                            type));
                 }
             }
         } catch (SQLException e) {
@@ -73,63 +80,24 @@ public class FinancialDAO {
     }
 
     public double getTotalPaidByClient(int clientId) {
-        String sql = "SELECT SUM(amount) FROM transactions WHERE client_id = ?";
+        // Only sum actual payments
+        return getTotalByClientAndType(clientId, Transaction.TYPE_PAYMENT);
+    }
+
+    public double getTotalByClientAndType(int clientId, String type) {
+        String sql = "SELECT SUM(amount) FROM transactions WHERE client_id = ? AND type = ?";
         try (Connection conn = getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, clientId);
+            pstmt.setString(2, type);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next())
                     return rs.getDouble(1);
             }
         } catch (SQLException e) {
-            System.err.println("Error total paid: " + e.getMessage());
+            System.err.println("Error total by type: " + e.getMessage());
         }
         return 0.0;
     }
 
-    // Expenses
-    public void addExpense(Expense e) {
-        String sql = "INSERT INTO expenses(description, amount, date) VALUES(?, ?, ?)";
-        try (Connection conn = getConnection();
-                PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, e.getDescription());
-            pstmt.setDouble(2, e.getAmount());
-            pstmt.setString(3, e.getDate());
-            pstmt.executeUpdate();
-        } catch (SQLException ex) {
-            System.err.println("Error adding expense: " + ex.getMessage());
-        }
-    }
-
-    public List<Expense> getAllExpenses() {
-        String sql = "SELECT * FROM expenses ORDER BY date DESC";
-        List<Expense> list = new ArrayList<>();
-        try (Connection conn = getConnection();
-                Statement stmt = conn.createStatement();
-                ResultSet rs = stmt.executeQuery(sql)) {
-            while (rs.next()) {
-                list.add(new Expense(
-                        rs.getInt("id"),
-                        rs.getString("description"),
-                        rs.getDouble("amount"),
-                        rs.getString("date")));
-            }
-        } catch (SQLException e) {
-            System.err.println("Error fetching expenses: " + e.getMessage());
-        }
-        return list;
-    }
-
-    public double getTotalExpenses() {
-        String sql = "SELECT SUM(amount) FROM expenses";
-        try (Connection conn = getConnection();
-                Statement stmt = conn.createStatement();
-                ResultSet rs = stmt.executeQuery(sql)) {
-            if (rs.next())
-                return rs.getDouble(1);
-        } catch (SQLException e) {
-            System.err.println("Error total expenses: " + e.getMessage());
-        }
-        return 0.0;
-    }
 }

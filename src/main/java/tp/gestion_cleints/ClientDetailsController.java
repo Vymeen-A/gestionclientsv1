@@ -3,10 +3,11 @@ package tp.gestion_cleints;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.layout.GridPane;
+import javafx.geometry.Insets;
+import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
-import javafx.stage.FileChooser;
-import java.io.File;
 import java.util.ResourceBundle;
 import java.util.List;
 
@@ -17,19 +18,31 @@ public class ClientDetailsController {
     @FXML
     public Label clientIceLabel;
     @FXML
-    public Label fixedAmountLabel;
+    public Label clientUsernameLabel;
     @FXML
-    public Label totalPaidLabel;
+    public Label clientPasswordLabel;
     @FXML
-    public Label remainingLabel;
+    public Label totalFeesLabel;
+    @FXML
+    public Label totalChargesLabel;
+    @FXML
+    public Label totalPaymentsLabel;
+    @FXML
+    public Label netBalanceLabel;
     @FXML
     public TableView<Transaction> transactionTable;
     @FXML
     public TableColumn<Transaction, String> dateColumn;
     @FXML
-    public TableColumn<Transaction, Double> amountColumn;
+    public TableColumn<Transaction, String> typeColumn;
     @FXML
     public TableColumn<Transaction, String> notesColumn;
+    @FXML
+    public TableColumn<Transaction, Double> debitColumn;
+    @FXML
+    public TableColumn<Transaction, Double> creditColumn;
+    @FXML
+    public TableColumn<Transaction, Double> balanceColumn;
 
     private Client currentClient;
     private FinancialDAO financialDAO = new FinancialDAO();
@@ -41,21 +54,101 @@ public class ClientDetailsController {
         try {
             bundle = ResourceBundle.getBundle("tp.gestion_cleints.messages", java.util.Locale.getDefault());
             dateColumn.setCellValueFactory(new PropertyValueFactory<>("date"));
-            amountColumn.setCellValueFactory(new PropertyValueFactory<>("amount"));
             notesColumn.setCellValueFactory(new PropertyValueFactory<>("notes"));
 
-            amountColumn.setCellFactory(column -> new TableCell<Transaction, Double>() {
+            typeColumn.setCellValueFactory(new PropertyValueFactory<>("type"));
+            typeColumn.setCellFactory(col -> new TableCell<Transaction, String>() {
                 @Override
-                protected void updateItem(Double item, boolean empty) {
+                protected void updateItem(String item, boolean empty) {
                     super.updateItem(item, empty);
-                    if (empty || item == null)
+                    if (empty || item == null) {
                         setText(null);
-                    else {
-                        String currency = bundle != null ? bundle.getString("currency") : "MAD";
-                        setText(String.format("%.2f %s", item, currency));
+                        setStyle("");
+                    } else {
+                        setText(item);
+                        // Style based on type
+                        if (Transaction.TYPE_CHARGE.equals(item)) {
+                            setStyle("-fx-text-fill: #c62828; -fx-font-weight: bold;"); // Red
+                        } else if (Transaction.TYPE_PAYMENT.equals(item)) {
+                            setStyle("-fx-text-fill: #2e7d32; -fx-font-weight: bold;"); // Green
+                        } else if (Transaction.TYPE_HONORAIRE_CONTRACT.equals(item)
+                                || Transaction.TYPE_HONORAIRE_EXTRA.equals(item)) {
+                            setStyle("-fx-text-fill: #1565c0; -fx-font-weight: bold;"); // Blue
+                        } else {
+                            setStyle("");
+                        }
                     }
                 }
             });
+
+            // Debit Column (Client Owes): Charges + Honoraires
+            debitColumn.setCellValueFactory(new PropertyValueFactory<>("amount")); // Value fallback
+            debitColumn.setCellFactory(column -> new TableCell<Transaction, Double>() {
+                @Override
+                protected void updateItem(Double item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty || item == null || getTableRow() == null || getTableRow().getItem() == null) {
+                        setText(null);
+                    } else {
+                        Transaction t = getTableRow().getItem();
+                        // Show ONLY if type implies Debit
+                        if (Transaction.TYPE_CHARGE.equals(t.getType()) ||
+                                Transaction.TYPE_HONORAIRE_CONTRACT.equals(t.getType()) ||
+                                Transaction.TYPE_HONORAIRE_EXTRA.equals(t.getType())) {
+                            setText(String.format("%.2f", item));
+                        } else {
+                            setText("-");
+                        }
+                    }
+                }
+            });
+
+            // Credit Column (Client Pays): Payments + Produits
+            creditColumn.setCellValueFactory(new PropertyValueFactory<>("amount"));
+            creditColumn.setCellFactory(column -> new TableCell<Transaction, Double>() {
+                @Override
+                protected void updateItem(Double item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty || item == null || getTableRow() == null || getTableRow().getItem() == null) {
+                        setText(null);
+                    } else {
+                        Transaction t = getTableRow().getItem();
+                        // Show ONLY if type implies Credit
+                        if (Transaction.TYPE_PAYMENT.equals(t.getType()) ||
+                                Transaction.TYPE_PRODUIT.equals(t.getType())) {
+                            setText(String.format("%.2f", item));
+                        } else {
+                            setText("-");
+                        }
+                    }
+                }
+            });
+
+            // Balance Column - This requires calculation relative to the row index
+            // For simplicity in this step, we will assume we can calculate it in
+            // refreshData
+            // or use a custom cell factory that calculates it on the fly (expensive for
+            // large lists).
+            // A better approach: The list passed to TableView should effectively have
+            // limits or be pre-calculated.
+            // We will stick to displaying a simple "-" for now until we implement the
+            // Running Balance logic in refreshData wrapper.
+            balanceColumn.setCellFactory(column -> new TableCell<Transaction, Double>() {
+                @Override
+                protected void updateItem(Double item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty || item == null) {
+                        setText(null);
+                    } else {
+                        setText(String.format("%.2f", item)); // We will put the calculated balance in 'amount' or a
+                                                              // map?
+                        // Actually, 'amount' is the transaction amount. We need a way to pass the
+                        // balance.
+                        // We will add a transient map or use UserData.
+                    }
+                }
+            });
+
         } catch (Exception e) {
             System.err.println("CRITICAL ERROR IN ClientDetailsController.initialize:");
             e.printStackTrace();
@@ -74,67 +167,171 @@ public class ClientDetailsController {
         }
     }
 
+    private java.util.Map<Integer, Double> transactionBalances = new java.util.HashMap<>();
+
     private void refreshData() {
         if (currentClient == null)
             return;
 
         clientNameLabel.setText(currentClient.getRaisonSociale());
         clientIceLabel.setText("I.C.E.: " + (currentClient.getIce() != null ? currentClient.getIce() : "-"));
-        double fixed = currentClient.getFixedTotalAmount();
-        double paid = financialDAO.getTotalPaidByClient(currentClient.getId());
-        double remaining = fixed - paid;
+        if (clientUsernameLabel != null)
+            clientUsernameLabel.setText(currentClient.getUsername() != null ? currentClient.getUsername() : "-");
+        if (clientPasswordLabel != null)
+            clientPasswordLabel.setText(currentClient.getPassword() != null ? currentClient.getPassword() : "-");
 
+        // 1. Fetch transactions
+        List<Transaction> transactions = financialDAO.getTransactionsByClient(currentClient.getId());
+
+        // 2. Calculate Totals
+        double fixedFees = currentClient.getFixedTotalAmount();
+        double extraFees = 0.0;
+        double charges = 0.0;
+        double payments = 0.0;
+        double produits = 0.0;
+
+        // Calculate Running Balances (Requires ASC order traverse)
+        // Sort by Date ASC for calculation
+        transactions.sort((t1, t2) -> t1.getDate().compareTo(t2.getDate()));
+
+        double runningBalance = 0.0;
+        transactionBalances.clear();
+
+        // Initial Balance from Fixed Contract?
+        // "Honoraires contractuels" - Auto-generated from contract?
+        // The plan says: "Honoraires contractuels: Auto-generated".
+        // For now, let's treat the 'Fixed Amount' as the starting balance or just sum
+        // it up?
+        // "Total honoraires = Fixed + Sum(Extra)".
+        // Meaning Fixed Amount is separate from the transaction list?
+        // If so, the running balance should start with the Fixed Amount?
+        // Let's assume the "Fixed Amount" is an annual/monthly fee that contributes to
+        // what they owe.
+        // If it's not in the transaction list, we should add it to the 'Debt'.
+        // Let's start runningBalance with fixedFees.
+        runningBalance = fixedFees;
+
+        for (Transaction t : transactions) {
+            double amount = t.getAmount();
+            String type = t.getType();
+            if (type == null)
+                type = Transaction.TYPE_PAYMENT;
+
+            if (Transaction.TYPE_HONORAIRE_EXTRA.equals(type)) {
+                extraFees += amount;
+                runningBalance += amount;
+            } else if (Transaction.TYPE_CHARGE.equals(type)) {
+                charges += amount;
+                runningBalance += amount;
+            } else if (Transaction.TYPE_PAYMENT.equals(type)) {
+                payments += amount;
+                runningBalance -= amount;
+            } else if (Transaction.TYPE_PRODUIT.equals(type)) {
+                produits += amount;
+                runningBalance -= amount;
+            }
+
+            transactionBalances.put(t.getId(), runningBalance);
+        }
+
+        double totalFees = fixedFees + extraFees;
+        double netBalance = (totalFees + charges) - (payments + produits);
+
+        // Update Labels
         String currency = bundle != null ? bundle.getString("currency") : "MAD";
-        fixedAmountLabel.setText(String.format("%.2f %s", fixed, currency));
-        totalPaidLabel.setText(String.format("%.2f %s", paid, currency));
-        remainingLabel.setText(String.format("%.2f %s", remaining, currency));
+        totalFeesLabel.setText(String.format("%.2f %s", totalFees, currency));
+        totalChargesLabel.setText(String.format("%.2f %s", charges, currency));
+        totalPaymentsLabel.setText(String.format("%.2f %s", payments, currency));
+        netBalanceLabel.setText(String.format("%.2f %s", netBalance, currency));
 
-        transactionTable.setItems(FXCollections.observableArrayList(
-                financialDAO.getTransactionsByClient(currentClient.getId())));
+        // Restore DESC order for display (Newest first)
+        transactions.sort((t1, t2) -> t2.getDate().compareTo(t1.getDate()));
+
+        transactionTable.setItems(FXCollections.observableArrayList(transactions));
+
+        // Update Balance Column Cell Factory to use map
+        balanceColumn.setCellFactory(column -> new TableCell<Transaction, Double>() {
+            @Override
+            protected void updateItem(Double item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
+                    setText(null);
+                } else {
+                    Transaction t = getTableRow().getItem();
+                    Double bal = transactionBalances.get(t.getId());
+                    if (bal != null) {
+                        setText(String.format("%.2f %s", bal, currency));
+                        if (bal > 0)
+                            setStyle("-fx-text-fill: #ef6c00; -fx-font-weight: bold;"); // Owe money
+                        else
+                            setStyle("-fx-text-fill: #2e7d32; -fx-font-weight: bold;"); // Clean/Credit
+                    } else {
+                        setText("-");
+                    }
+                }
+            }
+        });
     }
 
     @FXML
-    public void handleRecordPayment() {
-        TextInputDialog amountDialog = new TextInputDialog();
-        amountDialog.setTitle(bundle.getString("details.record_payment"));
-        amountDialog.setHeaderText(java.text.MessageFormat.format(bundle.getString("details.payment_for"),
-                currentClient.getRaisonSociale()));
-        amountDialog.setContentText(bundle.getString("expense.amount") + " (" + bundle.getString("currency") + "):");
+    public void handleAddTransaction() {
+        Dialog<Transaction> dialog = new Dialog<>();
+        dialog.setTitle("Add Transaction");
+        dialog.setHeaderText("Create a new transaction for " + currentClient.getRaisonSociale());
 
-        // Set window icon
-        try {
-            ((Stage) amountDialog.getDialogPane().getScene().getWindow()).getIcons().add(
-                    new javafx.scene.image.Image(getClass().getResourceAsStream("images/for-add-transaction.png")));
-        } catch (Exception e) {
-            System.err.println("Could not load payment amount icon: " + e.getMessage());
-        }
+        ButtonType saveButtonType = new ButtonType(bundle.getString("btn.save"), ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
 
-        amountDialog.showAndWait().ifPresent(amountStr -> {
-            try {
-                double amount = Double.parseDouble(amountStr);
-                TextInputDialog notesDialog = new TextInputDialog("Payment");
-                notesDialog.setTitle(bundle.getString("details.btn.record_payment"));
-                notesDialog.setHeaderText(bundle.getString("details.notes_header"));
-                notesDialog.setContentText(bundle.getString("form.notes") + ":");
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new javafx.geometry.Insets(20, 150, 10, 10));
 
-                // Set window icon
+        ComboBox<String> typeCombo = new ComboBox<>();
+        typeCombo.getItems().addAll(
+                Transaction.TYPE_PAYMENT,
+                Transaction.TYPE_CHARGE,
+                Transaction.TYPE_HONORAIRE_EXTRA,
+                Transaction.TYPE_HONORAIRE_CONTRACT);
+        typeCombo.setValue(Transaction.TYPE_PAYMENT); // Default
+
+        TextField amountField = new TextField();
+        amountField.setPromptText(bundle.getString("expense.amount"));
+
+        TextArea notesField = new TextArea();
+        notesField.setPromptText(bundle.getString("form.notes"));
+        notesField.setPrefHeight(60);
+
+        grid.add(new Label("Type:"), 0, 0);
+        grid.add(typeCombo, 1, 0);
+        grid.add(new Label(bundle.getString("expense.amount") + ":"), 0, 1);
+        grid.add(amountField, 1, 1);
+        grid.add(new Label(bundle.getString("form.notes") + ":"), 0, 2);
+        grid.add(notesField, 1, 2);
+
+        dialog.getDialogPane().setContent(grid);
+
+        // Convert result to Transaction
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == saveButtonType) {
                 try {
-                    ((Stage) notesDialog.getDialogPane().getScene().getWindow()).getIcons().add(
-                            new javafx.scene.image.Image(
-                                    getClass().getResourceAsStream("images/for-add-transaction.png")));
-                } catch (Exception e) {
-                    System.err.println("Could not load payment notes icon: " + e.getMessage());
+                    double amount = Double.parseDouble(amountField.getText());
+                    String type = typeCombo.getValue();
+                    String notes = notesField.getText();
+                    String date = new java.sql.Date(System.currentTimeMillis()).toString();
+                    return new Transaction(currentClient.getId(), amount, date, notes, type);
+                } catch (NumberFormatException e) {
+                    showAlert(Alert.AlertType.ERROR, "Error", "Invalid Amount");
+                    return null;
                 }
+            }
+            return null;
+        });
 
-                notesDialog.showAndWait().ifPresent(notes -> {
-                    Transaction t = new Transaction(currentClient.getId(), amount,
-                            new java.sql.Date(System.currentTimeMillis()).toString(), notes);
-                    financialDAO.addTransaction(t);
-                    refreshData();
-                });
-            } catch (NumberFormatException e) {
-                showAlert(Alert.AlertType.ERROR, bundle.getString("alert.error"),
-                        bundle.getString("alert.invalid_amount"));
+        dialog.showAndWait().ifPresent(t -> {
+            if (t != null) {
+                financialDAO.addTransaction(t);
+                refreshData();
             }
         });
     }
@@ -148,20 +345,59 @@ public class ClientDetailsController {
             return;
         }
 
-        TextInputDialog dialog = new TextInputDialog(String.valueOf(selected.getAmount()));
+        Dialog<Transaction> dialog = new Dialog<>();
         dialog.setTitle(bundle.getString("details.edit_transaction"));
-        dialog.setHeaderText(bundle.getString("details.edit_transaction") + " - " + selected.getDate());
-        dialog.setContentText(bundle.getString("expense.amount") + " (" + bundle.getString("currency") + "):");
+        dialog.setHeaderText("Edit transaction - " + selected.getDate());
 
-        dialog.showAndWait().ifPresent(amountStr -> {
-            try {
-                double amount = Double.parseDouble(amountStr);
-                selected.setAmount(amount);
-                financialDAO.updateTransaction(selected);
+        ButtonType saveButtonType = new ButtonType(bundle.getString("btn.save"), ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new javafx.geometry.Insets(20, 150, 10, 10));
+
+        ComboBox<String> typeCombo = new ComboBox<>();
+        typeCombo.getItems().addAll(
+                Transaction.TYPE_PAYMENT,
+                Transaction.TYPE_CHARGE,
+                Transaction.TYPE_HONORAIRE_EXTRA,
+                Transaction.TYPE_HONORAIRE_CONTRACT);
+        typeCombo.setValue(selected.getType() != null ? selected.getType() : Transaction.TYPE_PAYMENT);
+
+        TextField amountField = new TextField(String.valueOf(selected.getAmount()));
+        TextArea notesField = new TextArea(selected.getNotes());
+        notesField.setPrefHeight(60);
+
+        grid.add(new Label("Type:"), 0, 0);
+        grid.add(typeCombo, 1, 0);
+        grid.add(new Label(bundle.getString("expense.amount") + ":"), 0, 1);
+        grid.add(amountField, 1, 1);
+        grid.add(new Label(bundle.getString("form.notes") + ":"), 0, 2);
+        grid.add(notesField, 1, 2);
+
+        dialog.getDialogPane().setContent(grid);
+
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == saveButtonType) {
+                try {
+                    double amount = Double.parseDouble(amountField.getText());
+                    selected.setAmount(amount);
+                    selected.setType(typeCombo.getValue());
+                    selected.setNotes(notesField.getText());
+                    return selected;
+                } catch (NumberFormatException e) {
+                    showAlert(Alert.AlertType.ERROR, "Error", "Invalid Amount");
+                    return null;
+                }
+            }
+            return null;
+        });
+
+        dialog.showAndWait().ifPresent(t -> {
+            if (t != null) {
+                financialDAO.updateTransaction(t);
                 refreshData();
-            } catch (NumberFormatException e) {
-                showAlert(Alert.AlertType.ERROR, bundle.getString("alert.error"),
-                        bundle.getString("alert.invalid_amount"));
             }
         });
     }
@@ -189,33 +425,6 @@ public class ClientDetailsController {
     }
 
     @FXML
-    public void handleExportReceipt() {
-        Transaction selected = transactionTable.getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            showAlert(Alert.AlertType.WARNING, bundle.getString("alert.no_selection"),
-                    bundle.getString("alert.select_transaction"));
-            return;
-        }
-
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Save Receipt");
-        fileChooser.setInitialFileName(
-                "Receipt_" + currentClient.getRaisonSociale().replace(" ", "_") + "_" + selected.getId() + ".pdf");
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PDF Files", "*.pdf"));
-
-        File file = fileChooser.showSaveDialog(transactionTable.getScene().getWindow());
-        if (file != null) {
-            try {
-                PdfExporter.exportTransactionReceipt(selected, currentClient, adminDAO.getAdminInfo(),
-                        file.getAbsolutePath(), bundle);
-                showAlert(Alert.AlertType.INFORMATION, "Success", "Receipt exported successfully!");
-            } catch (Exception e) {
-                showAlert(Alert.AlertType.ERROR, "Error", "Failed to export receipt: " + e.getMessage());
-            }
-        }
-    }
-
-    @FXML
     public void handlePreviewReceipt() {
         Transaction selected = transactionTable.getSelectionModel().getSelectedItem();
         if (selected == null) {
@@ -225,43 +434,11 @@ public class ClientDetailsController {
         }
 
         try {
-            File tempFile = File.createTempFile("Receipt_Preview_", ".pdf");
-            PdfExporter.exportTransactionReceipt(selected, currentClient, adminDAO.getAdminInfo(),
-                    tempFile.getAbsolutePath(), bundle);
-            if (java.awt.Desktop.isDesktopSupported()) {
-                java.awt.Desktop.getDesktop().open(tempFile);
-            } else {
-                showAlert(Alert.AlertType.WARNING, "Preview", "Desktop operations not supported.");
-            }
+            PreviewDialog dialog = new PreviewDialog(adminDAO.getAdminInfo());
+            dialog.showTransactionReceipt(selected, currentClient);
         } catch (Exception e) {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Preview Error", "Failed to generate preview: " + e.getMessage());
-        }
-    }
-
-    @FXML
-    public void handleExportStatement() {
-        List<Transaction> transactions = transactionTable.getItems();
-        if (transactions.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, bundle.getString("alert.no_selection_title"),
-                    bundle.getString("alert.no_selection_content"));
-            return;
-        }
-
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Save Statement");
-        fileChooser.setInitialFileName("Statement_" + currentClient.getRaisonSociale().replace(" ", "_") + ".pdf");
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PDF Files", "*.pdf"));
-
-        File file = fileChooser.showSaveDialog(transactionTable.getScene().getWindow());
-        if (file != null) {
-            try {
-                PdfExporter.exportTransactionStatement(currentClient, transactions, adminDAO.getAdminInfo(),
-                        file.getAbsolutePath(), bundle);
-                showAlert(Alert.AlertType.INFORMATION, "Success", "Statement exported successfully!");
-            } catch (Exception e) {
-                showAlert(Alert.AlertType.ERROR, "Error", "Failed to export statement: " + e.getMessage());
-            }
         }
     }
 
@@ -275,14 +452,8 @@ public class ClientDetailsController {
         }
 
         try {
-            File tempFile = File.createTempFile("Statement_Preview_", ".pdf");
-            PdfExporter.exportTransactionStatement(currentClient, transactions, adminDAO.getAdminInfo(),
-                    tempFile.getAbsolutePath(), bundle);
-            if (java.awt.Desktop.isDesktopSupported()) {
-                java.awt.Desktop.getDesktop().open(tempFile);
-            } else {
-                showAlert(Alert.AlertType.WARNING, "Preview", "Desktop operations not supported.");
-            }
+            PreviewDialog dialog = new PreviewDialog(adminDAO.getAdminInfo());
+            dialog.showStatement(currentClient, transactions);
         } catch (Exception e) {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Preview Error", "Failed to generate preview: " + e.getMessage());

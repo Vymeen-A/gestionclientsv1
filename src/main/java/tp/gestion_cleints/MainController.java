@@ -43,12 +43,6 @@ public class MainController {
     }
 
     @FXML
-    public void showExpenses() {
-        currentView = "expenses-list.fxml";
-        loadCurrentView();
-    }
-
-    @FXML
     public void showSecurity() {
         currentView = "change-password.fxml";
         loadCurrentView();

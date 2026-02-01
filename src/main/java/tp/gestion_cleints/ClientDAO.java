@@ -11,7 +11,7 @@ public class ClientDAO {
     }
 
     public boolean addClient(Client client) {
-        String sql = "INSERT INTO clients(raison_sociale, nom_prenom, adresse, ville, ice, rc, tp, taxe_habit, tva, regime_tva, fax, email, rib, password, secteur, debut_act, fixed_total_amount, ttc) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO clients(raison_sociale, nom_prenom, adresse, ville, ice, rc, tp, taxe_habit, tva, regime_tva, fax, email, rib, username, password, secteur, debut_act, fixed_total_amount, ttc) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, client.getRaisonSociale());
@@ -27,11 +27,12 @@ public class ClientDAO {
             pstmt.setString(11, client.getFax());
             pstmt.setString(12, client.getEmail());
             pstmt.setString(13, client.getRib());
-            pstmt.setString(14, client.getPassword());
-            pstmt.setString(15, client.getSecteur());
-            pstmt.setString(16, client.getDebutAct());
-            pstmt.setDouble(17, client.getFixedTotalAmount());
-            pstmt.setDouble(18, client.getTtc());
+            pstmt.setString(14, client.getUsername());
+            pstmt.setString(15, client.getPassword());
+            pstmt.setString(16, client.getSecteur());
+            pstmt.setString(17, client.getDebutAct());
+            pstmt.setDouble(18, client.getFixedTotalAmount());
+            pstmt.setDouble(19, client.getTtc());
             pstmt.executeUpdate();
             return true;
         } catch (SQLException e) {
@@ -94,6 +95,7 @@ public class ClientDAO {
                 rs.getString("fax"),
                 rs.getString("email"),
                 rs.getString("rib"),
+                rs.getString("username"),
                 rs.getString("password"),
                 rs.getString("secteur"),
                 rs.getString("debut_act"),
@@ -102,7 +104,7 @@ public class ClientDAO {
     }
 
     public boolean updateClient(Client client) {
-        String sql = "UPDATE clients SET raison_sociale = ?, nom_prenom = ?, adresse = ?, ville = ?, ice = ?, rc = ?, tp = ?, taxe_habit = ?, tva = ?, regime_tva = ?, fax = ?, email = ?, rib = ?, password = ?, secteur = ?, debut_act = ?, fixed_total_amount = ?, ttc = ? WHERE id = ?";
+        String sql = "UPDATE clients SET raison_sociale = ?, nom_prenom = ?, adresse = ?, ville = ?, ice = ?, rc = ?, tp = ?, taxe_habit = ?, tva = ?, regime_tva = ?, fax = ?, email = ?, rib = ?, username = ?, password = ?, secteur = ?, debut_act = ?, fixed_total_amount = ?, ttc = ? WHERE id = ?";
         try (Connection conn = getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, client.getRaisonSociale());
@@ -118,12 +120,13 @@ public class ClientDAO {
             pstmt.setString(11, client.getFax());
             pstmt.setString(12, client.getEmail());
             pstmt.setString(13, client.getRib());
-            pstmt.setString(14, client.getPassword());
-            pstmt.setString(15, client.getSecteur());
-            pstmt.setString(16, client.getDebutAct());
-            pstmt.setDouble(17, client.getFixedTotalAmount());
-            pstmt.setDouble(18, client.getTtc());
-            pstmt.setInt(19, client.getId());
+            pstmt.setString(14, client.getUsername());
+            pstmt.setString(15, client.getPassword());
+            pstmt.setString(16, client.getSecteur());
+            pstmt.setString(17, client.getDebutAct());
+            pstmt.setDouble(18, client.getFixedTotalAmount());
+            pstmt.setDouble(19, client.getTtc());
+            pstmt.setInt(20, client.getId());
             pstmt.executeUpdate();
             return true;
         } catch (SQLException e) {

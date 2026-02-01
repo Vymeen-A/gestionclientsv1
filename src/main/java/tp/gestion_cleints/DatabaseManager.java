@@ -38,6 +38,7 @@ public class DatabaseManager {
                     + "fax TEXT, "
                     + "email TEXT, "
                     + "rib TEXT, "
+                    + "username TEXT, "
                     + "password TEXT, "
                     + "secteur TEXT, "
                     + "debut_act TEXT, "
@@ -53,6 +54,7 @@ public class DatabaseManager {
                     + "amount REAL, "
                     + "date TEXT, "
                     + "notes TEXT, "
+                    + "type TEXT, "
                     + "FOREIGN KEY(client_id) REFERENCES clients(id)"
                     + ");";
             stmt.execute(createTransactionsTable);
@@ -118,7 +120,7 @@ public class DatabaseManager {
             String[] newCols = {
                     "raison_sociale TEXT", "nom_prenom TEXT", "adresse TEXT", "ville TEXT", "ice TEXT", "rc TEXT",
                     "tp TEXT", "taxe_habit TEXT", "tva TEXT", "regime_tva TEXT", "fax TEXT",
-                    "email TEXT", "rib TEXT", "password TEXT", "secteur TEXT", "debut_act TEXT",
+                    "email TEXT", "rib TEXT", "username TEXT", "password TEXT", "secteur TEXT", "debut_act TEXT",
                     "fixed_total_amount REAL DEFAULT 0.0", "ttc REAL DEFAULT 0.0"
             };
 
@@ -128,6 +130,15 @@ public class DatabaseManager {
                 } catch (SQLException e) {
                     // Column might already exist, ignore
                 }
+            }
+
+            // Migrate transactions table (add type)
+            try {
+                stmt.execute("ALTER TABLE transactions ADD COLUMN type TEXT");
+                // Update existing records to be PAYMENT by default
+                stmt.execute("UPDATE transactions SET type = 'PAYMENT' WHERE type IS NULL");
+            } catch (SQLException e) {
+                // Column likely exists
             }
 
             // Data Migration for old clients

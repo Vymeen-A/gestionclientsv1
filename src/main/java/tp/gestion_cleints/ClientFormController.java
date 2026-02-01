@@ -36,6 +36,8 @@ public class ClientFormController {
     @FXML
     private TextField ribField;
     @FXML
+    private TextField usernameField;
+    @FXML
     private TextField passwordField;
     @FXML
     private TextField secteurField;
@@ -70,6 +72,7 @@ public class ClientFormController {
             emailField.setText(client.getEmail());
             ttcField.setText(String.valueOf(client.getTtc()));
             ribField.setText(client.getRib());
+            usernameField.setText(client.getUsername());
             passwordField.setText(client.getPassword());
             secteurField.setText(client.getSecteur());
             debutActField.setText(client.getDebutAct());
@@ -111,7 +114,7 @@ public class ClientFormController {
                     villeField.getText(), iceField.getText(), rcField.getText(), tpField.getText(),
                     taxeHabitField.getText(), tvaField.getText(), regimeTvaField.getText(),
                     faxField.getText(), emailField.getText(),
-                    ribField.getText(), passwordField.getText(), secteurField.getText(),
+                    ribField.getText(), usernameField.getText(), passwordField.getText(), secteurField.getText(),
                     debutActField.getText(), amount, ttc);
             success = clientDAO.addClient(newClient);
         } else {
@@ -128,6 +131,7 @@ public class ClientFormController {
             currentClient.setFax(faxField.getText());
             currentClient.setEmail(emailField.getText());
             currentClient.setRib(ribField.getText());
+            currentClient.setUsername(usernameField.getText());
             currentClient.setPassword(passwordField.getText());
             currentClient.setSecteur(secteurField.getText());
             currentClient.setDebutAct(debutActField.getText());

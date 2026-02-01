@@ -15,6 +15,7 @@ public class Client {
     private String fax;
     private String email;
     private String rib;
+    private String username; // Reference username
     private String password; // Reference password, not for login
     private String secteur;
     private String debutAct;
@@ -24,7 +25,7 @@ public class Client {
     public Client(int id, String raisonSociale, String nomPrenom, String adresse, String ville,
             String ice, String rc, String tp, String taxeHabit, String tva,
             String regimeTva, String fax, String email, String rib,
-            String password, String secteur, String debutAct, double fixedTotalAmount, double ttc) {
+            String username, String password, String secteur, String debutAct, double fixedTotalAmount, double ttc) {
         this.id = id;
         this.raisonSociale = raisonSociale;
         this.nomPrenom = nomPrenom;
@@ -39,6 +40,7 @@ public class Client {
         this.fax = fax;
         this.email = email;
         this.rib = rib;
+        this.username = username;
         this.password = password;
         this.secteur = secteur;
         this.debutAct = debutAct;
@@ -157,6 +159,14 @@ public class Client {
 
     public void setRib(String rib) {
         this.rib = rib;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getPassword() {

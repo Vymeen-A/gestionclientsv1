@@ -61,17 +61,20 @@
             <Label text="%client.rib" GridPane.columnIndex="0" GridPane.rowIndex="13" styleClass="summary-label-title"/>
             <TextField fx:id="ribField" GridPane.columnIndex="1" GridPane.rowIndex="13"/>
 
-            <Label text="%client.password" GridPane.columnIndex="0" GridPane.rowIndex="14" styleClass="summary-label-title"/>
-            <TextField fx:id="passwordField" GridPane.columnIndex="1" GridPane.rowIndex="14"/>
+            <Label text="%client.username" GridPane.columnIndex="0" GridPane.rowIndex="14" styleClass="summary-label-title"/>
+            <TextField fx:id="usernameField" GridPane.columnIndex="1" GridPane.rowIndex="14"/>
 
-            <Label text="%client.secteur" GridPane.columnIndex="0" GridPane.rowIndex="15" styleClass="summary-label-title"/>
-            <TextField fx:id="secteurField" GridPane.columnIndex="1" GridPane.rowIndex="15"/>
+            <Label text="%client.password" GridPane.columnIndex="0" GridPane.rowIndex="15" styleClass="summary-label-title"/>
+            <TextField fx:id="passwordField" GridPane.columnIndex="1" GridPane.rowIndex="15"/>
 
-            <Label text="%client.debut_act" GridPane.columnIndex="0" GridPane.rowIndex="16" styleClass="summary-label-title"/>
-            <TextField fx:id="debutActField" GridPane.columnIndex="1" GridPane.rowIndex="16"/>
+            <Label text="%client.secteur" GridPane.columnIndex="0" GridPane.rowIndex="16" styleClass="summary-label-title"/>
+            <TextField fx:id="secteurField" GridPane.columnIndex="1" GridPane.rowIndex="16"/>
 
-            <Label text="%client.fixed_total" GridPane.columnIndex="0" GridPane.rowIndex="17" styleClass="summary-label-value" style="-fx-font-size: 14px;"/>
-            <TextField fx:id="fixedTotalAmountField" GridPane.columnIndex="1" GridPane.rowIndex="17" style="-fx-border-color: #3498db;"/>
+            <Label text="%client.debut_act" GridPane.columnIndex="0" GridPane.rowIndex="17" styleClass="summary-label-title"/>
+            <TextField fx:id="debutActField" GridPane.columnIndex="1" GridPane.rowIndex="17"/>
+
+            <Label text="%client.fixed_total" GridPane.columnIndex="0" GridPane.rowIndex="18" styleClass="summary-label-value" style="-fx-font-size: 14px;"/>
+            <TextField fx:id="fixedTotalAmountField" GridPane.columnIndex="1" GridPane.rowIndex="18" style="-fx-border-color: #3498db;"/>
         </GridPane>
     </ScrollPane>
 

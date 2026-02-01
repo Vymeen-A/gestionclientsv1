@@ -23,7 +23,7 @@
             
             <Button text="%nav.dashboard" styleClass="nav-button" maxWidth="Infinity" onAction="#showDashboard"/>
             <Button text="%nav.clients" styleClass="nav-button" maxWidth="Infinity" onAction="#showClients"/>
-            <Button text="%nav.expenses" styleClass="nav-button" maxWidth="Infinity" onAction="#showExpenses"/>
+
             <Button text="%nav.security" styleClass="nav-button" maxWidth="Infinity" onAction="#showSecurity"/>
             <Button text="%nav.admin" styleClass="nav-button" maxWidth="Infinity" onAction="#showAdminSettings"/>
             

@@ -34,6 +34,7 @@ public class ClientListController {
     public TableColumn<Client, Double> ttcColumn;
 
     private ClientDAO clientDAO;
+    private AdminDAO adminDAO = new AdminDAO(); // Injected
     private ObservableList<Client> clientList;
     private ResourceBundle bundle;
 
@@ -179,12 +180,23 @@ public class ClientListController {
         java.io.File file = fileChooser.showSaveDialog(clientTable.getScene().getWindow());
         if (file != null) {
             try {
-                PdfExporter.exportClients(clientList, file.getAbsolutePath(), bundle);
+                PdfExporter.exportClients(clientList, adminDAO.getAdminInfo(), file.getAbsolutePath(), bundle);
                 showAlert(bundle.getString("alert.success"), "Report exported successfully.");
             } catch (Exception e) {
                 e.printStackTrace();
                 showAlert(bundle.getString("alert.error"), "Failed to export PDF: " + e.getMessage());
             }
+        }
+    }
+
+    @FXML
+    public void handlePreviewPdf() {
+        try {
+            PreviewDialog dialog = new PreviewDialog(adminDAO.getAdminInfo());
+            dialog.showClientList(clientList);
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert("Preview Error", "Failed to generate preview: " + e.getMessage());
         }
     }
 

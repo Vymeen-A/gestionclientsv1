@@ -8,44 +8,95 @@ import java.util.ResourceBundle;
 
 public class PdfExporter {
 
-    public static void exportClients(List<Client> clients, String filePath, ResourceBundle bundle) throws Exception {
+    public static void exportClients(List<Client> clients, AdminInfo adminInfo, String filePath, ResourceBundle bundle)
+            throws Exception {
         Document document = new Document(PageSize.A4);
         PdfWriter.getInstance(document, new FileOutputStream(filePath));
 
         document.open();
 
-        // Header
+        // 1. Admin Header (Top Right or Left)
         Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18);
+        Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 10);
+        Font smallFont = FontFactory.getFont(FontFactory.HELVETICA, 8, java.awt.Color.GRAY);
+
+        if (adminInfo != null && adminInfo.getRaisonSociale() != null) {
+            Paragraph companyName = new Paragraph(adminInfo.getRaisonSociale().toUpperCase(),
+                    FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, java.awt.Color.DARK_GRAY));
+            companyName.setAlignment(Element.ALIGN_LEFT);
+            document.add(companyName);
+
+            StringBuilder adminDetails = new StringBuilder();
+            if (adminInfo.getAdresse() != null)
+                adminDetails.append(adminInfo.getAdresse()).append("\n");
+            if (adminInfo.getVille() != null)
+                adminDetails.append(adminInfo.getVille());
+
+            Paragraph contactParam = new Paragraph(adminDetails.toString(), smallFont);
+            contactParam.setAlignment(Element.ALIGN_LEFT);
+            document.add(contactParam);
+
+            // Legal Info Line
+            StringBuilder legal = new StringBuilder();
+            if (adminInfo.getIce() != null)
+                legal.append("ICE: ").append(adminInfo.getIce()).append("  ");
+            if (adminInfo.getRc() != null)
+                legal.append("RC: ").append(adminInfo.getRc()).append("  ");
+            if (adminInfo.getIdentifiantTva() != null)
+                legal.append("IF: ").append(adminInfo.getIdentifiantTva());
+
+            if (legal.length() > 0) {
+                Paragraph legalParam = new Paragraph(legal.toString(), smallFont);
+                legalParam.setAlignment(Element.ALIGN_LEFT);
+                document.add(legalParam);
+            }
+
+            document.add(new Paragraph(" ")); // Spacer
+            document.add(new com.lowagie.text.pdf.draw.LineSeparator(0.5f, 100, java.awt.Color.LIGHT_GRAY,
+                    Element.ALIGN_CENTER, -1));
+            document.add(new Paragraph(" ")); // Spacer
+        }
+
+        // 2. Report Title
         Paragraph title = new Paragraph(bundle.getString("pdf.title"), titleFont);
         title.setAlignment(Element.ALIGN_CENTER);
         title.setSpacingAfter(20);
         document.add(title);
 
-        // Table
+        // 3. Table
         PdfPTable table = new PdfPTable(6); // Raison Sociale, Email, Ville, ICE, HT, TTC
         table.setWidthPercentage(100);
         table.setSpacingBefore(10);
+        float[] columnWidths = { 25f, 20f, 15f, 15f, 12f, 13f }; // Adjust widths
+        table.setWidths(columnWidths);
 
         // Headers
         addTableHeader(table, "Raison Sociale");
         addTableHeader(table, "Email");
         addTableHeader(table, "Ville");
         addTableHeader(table, "I.C.E.");
-        addTableHeader(table, "HT");
-        addTableHeader(table, "TTC");
+        addTableHeader(table, "Total HT");
+        addTableHeader(table, "Total TTC");
 
         // Rows
         String currency = bundle.getString("currency");
         for (Client client : clients) {
-            table.addCell(client.getRaisonSociale());
-            table.addCell(client.getEmail());
-            table.addCell(client.getVille());
-            table.addCell(client.getIce());
-            table.addCell(String.format("%.2f %s", client.getFixedTotalAmount(), currency));
-            table.addCell(String.format("%.2f %s", client.getTtc(), currency));
+            table.addCell(new Phrase(client.getRaisonSociale(), normalFont));
+            table.addCell(new Phrase(client.getEmail(), normalFont));
+            table.addCell(new Phrase(client.getVille(), normalFont));
+            table.addCell(new Phrase(client.getIce(), normalFont));
+            table.addCell(new Phrase(String.format("%.2f %s", client.getFixedTotalAmount(), currency), normalFont));
+            table.addCell(new Phrase(String.format("%.2f %s", client.getTtc(), currency), normalFont));
         }
 
         document.add(table);
+
+        // Footer timestamp
+        Paragraph footer = new Paragraph("Généré le: " + new java.util.Date().toString(), smallFont);
+        footer.setAlignment(Element.ALIGN_RIGHT);
+        footer.setSpacingBefore(20);
+        document.add(footer);
+
         document.close();
     }
 

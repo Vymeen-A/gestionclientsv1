@@ -30,27 +30,30 @@
                     </VBox>
                 </HBox>
 
-                <!-- Metrics Row -->
-                <HBox spacing="25">
-                    <VBox styleClass="detail-summary-box" HBox.hgrow="ALWAYS" alignment="CENTER_LEFT" style="-fx-padding: 25;">
-                        <Label text="%details.contract_total" styleClass="summary-label-title" style="-fx-font-size: 11px;"/>
-                        <Label fx:id="fixedAmountLabel" text="0.00 MAD" styleClass="summary-label-value" style="-fx-font-size: 24px;"/>
+                <!-- Metrics Row (Accountant View) -->
+                <HBox spacing="20">
+                    <!-- Card 1: Total Honoraires (Fees) -->
+                    <VBox styleClass="detail-summary-box" HBox.hgrow="ALWAYS" alignment="CENTER_LEFT" style="-fx-padding: 20; -fx-background-color: #e3f2fd; -fx-border-color: #bbdefb; -fx-border-radius: 8;">
+                        <Label text="TOTAL HONORAIRES" styleClass="summary-label-title" style="-fx-text-fill: #1565c0; -fx-font-weight: bold;"/>
+                        <Label fx:id="totalFeesLabel" text="0.00 MAD" styleClass="summary-label-value" style="-fx-text-fill: #1565c0;"/>
                     </VBox>
-                    <VBox HBox.hgrow="ALWAYS" alignment="CENTER_LEFT">
-                        <styleClass>
-                            <String fx:value="detail-summary-box" />
-                            <String fx:value="stat-success" />
-                        </styleClass>
-                        <Label text="%details.payments_total" styleClass="summary-label-title"/>
-                        <Label fx:id="totalPaidLabel" text="0.00 MAD" styleClass="summary-label-value"/>
+                    
+                    <!-- Card 2: Total Charges (Debit) -->
+                    <VBox styleClass="detail-summary-box" HBox.hgrow="ALWAYS" alignment="CENTER_LEFT" style="-fx-padding: 20; -fx-background-color: #ffebee; -fx-border-color: #ffcdd2; -fx-border-radius: 8;">
+                        <Label text="CHARGES (DEBIT)" styleClass="summary-label-title" style="-fx-text-fill: #c62828; -fx-font-weight: bold;"/>
+                        <Label fx:id="totalChargesLabel" text="0.00 MAD" styleClass="summary-label-value" style="-fx-text-fill: #c62828;"/>
                     </VBox>
-                    <VBox HBox.hgrow="ALWAYS" alignment="CENTER_LEFT">
-                        <styleClass>
-                            <String fx:value="detail-summary-box" />
-                            <String fx:value="stat-danger" />
-                        </styleClass>
-                        <Label text="%details.pending_balance" styleClass="summary-label-title"/>
-                        <Label fx:id="remainingLabel" text="0.00 MAD" styleClass="summary-label-value"/>
+
+                    <!-- Card 3: Total Payments (Credit) -->
+                    <VBox styleClass="detail-summary-box" HBox.hgrow="ALWAYS" alignment="CENTER_LEFT" style="-fx-padding: 20; -fx-background-color: #e8f5e9; -fx-border-color: #c8e6c9; -fx-border-radius: 8;">
+                        <Label text="PAIEMENTS (CREDIT)" styleClass="summary-label-title" style="-fx-text-fill: #2e7d32; -fx-font-weight: bold;"/>
+                        <Label fx:id="totalPaymentsLabel" text="0.00 MAD" styleClass="summary-label-value" style="-fx-text-fill: #2e7d32;"/>
+                    </VBox>
+
+                    <!-- Card 4: Net Balance -->
+                    <VBox styleClass="detail-summary-box" HBox.hgrow="ALWAYS" alignment="CENTER_LEFT" style="-fx-padding: 20; -fx-background-color: #fff3e0; -fx-border-color: #ffe0b2; -fx-border-radius: 8;">
+                        <Label text="SOLDE NET" styleClass="summary-label-title" style="-fx-text-fill: #ef6c00; -fx-font-weight: bold;"/>
+                        <Label fx:id="netBalanceLabel" text="0.00 MAD" styleClass="summary-label-value" style="-fx-text-fill: #ef6c00;"/>
                     </VBox>
                 </HBox>
 
@@ -62,16 +65,19 @@
                                 <Image url="@images/for-add-transaction.png"/>
                             </image>
                         </ImageView>
-                        <Label text="%details.transaction_log" styleClass="stat-title"/>
+                        <Label text="JOURNAL DES TRANSACTIONS" styleClass="stat-title"/>
                         <Region HBox.hgrow="ALWAYS"/>
-                        <Button text="%details.btn.download_receipt" onAction="#handleExportReceipt" styleClass="button-action" style="-fx-font-size: 12px;"/>
+
                         <Button text="%details.btn.preview_receipt" onAction="#handlePreviewReceipt" styleClass="button-secondary" style="-fx-font-size: 12px;"/>
                     </HBox>
                     <TableView fx:id="transactionTable" prefHeight="450" VBox.vgrow="ALWAYS">
                         <columns>
-                            <TableColumn fx:id="dateColumn" text="%details.column.date" prefWidth="130"/>
-                            <TableColumn fx:id="amountColumn" text="%details.column.amount" prefWidth="130"/>
-                            <TableColumn fx:id="notesColumn" text="%details.column.notes" prefWidth="350"/>
+                            <TableColumn fx:id="dateColumn" text="DATE" prefWidth="100"/>
+                            <TableColumn fx:id="typeColumn" text="TYPE" prefWidth="120"/>
+                            <TableColumn fx:id="notesColumn" text="DESCRIPTION" prefWidth="250"/>
+                            <TableColumn fx:id="debitColumn" text="DEBIT (Client Doit)" prefWidth="120" style="-fx-text-fill: #c62828;"/>
+                            <TableColumn fx:id="creditColumn" text="CREDIT (Client Paie)" prefWidth="120" style="-fx-text-fill: #2e7d32;"/>
+                            <TableColumn fx:id="balanceColumn" text="SOLDE" prefWidth="120" style="-fx-font-weight: bold;"/>
                         </columns>
                         <columnResizePolicy>
                             <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
@@ -89,13 +95,23 @@
                         <Label text="%details.ice_registration" styleClass="summary-label-title" style="-fx-font-size: 10px;"/>
                         <Label fx:id="clientIceLabel" text="-" style="-fx-font-weight: bold; -fx-text-fill: #2c3e50; -fx-font-size: 15px;"/>
                     </VBox>
+
+                    <VBox spacing="5">
+                         <Label text="%client.username" styleClass="summary-label-title" style="-fx-font-size: 10px;"/>
+                         <Label fx:id="clientUsernameLabel" text="-" style="-fx-font-weight: bold; -fx-text-fill: #2c3e50; -fx-font-size: 14px;"/>
+                    </VBox>
+
+                    <VBox spacing="5">
+                         <Label text="%client.password" styleClass="summary-label-title" style="-fx-font-size: 10px;"/>
+                         <Label fx:id="clientPasswordLabel" text="-" style="-fx-font-weight: bold; -fx-text-fill: #2c3e50; -fx-font-size: 14px;"/>
+                    </VBox>
                 </VBox>
 
                 <Separator style="-fx-padding: 10 0;"/>
 
                 <VBox spacing="15">
-                    <Button text="%details.btn.record_payment" onAction="#handleRecordPayment" styleClass="button-primary" maxWidth="Infinity" style="-fx-font-size: 14px; -fx-padding: 12;"/>
-                    <Button text="%details.btn.export_statement" onAction="#handleExportStatement" styleClass="button-action" maxWidth="Infinity" style="-fx-font-size: 14px; -fx-padding: 12;"/>
+                    <Button text="%details.btn.record_payment" onAction="#handleAddTransaction" styleClass="button-primary" maxWidth="Infinity" style="-fx-font-size: 14px; -fx-padding: 12;"/>
+
                     <Button text="%details.btn.preview_statement" onAction="#handlePreviewStatement" styleClass="button-secondary" maxWidth="Infinity" style="-fx-font-size: 14px; -fx-padding: 12;"/>
                     <Separator style="-fx-padding: 5 0;"/>
                     <Button text="%details.btn.edit_entry" onAction="#handleEditTransaction" styleClass="button-secondary" maxWidth="Infinity" style="-fx-padding: 10;"/>

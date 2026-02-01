@@ -22,6 +22,7 @@
             <Button text="Details" onAction="#handleViewDetails" styleClass="button-secondary"/>
             <Button text="%btn.delete" onAction="#handleDeleteClient" styleClass="button-danger"/>
             <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Preview Report" onAction="#handlePreviewPdf" styleClass="button-secondary"/>
             <Button text="Export Report" onAction="#handleExportPdf" styleClass="button-secondary"/>
         </HBox>
 
