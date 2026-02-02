@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox spacing="20" styleClass="content-pane" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tp.gestion_cleints.PaymentTypesController">
+    <padding>
+        <Insets top="30" right="40" bottom="30" left="40"/>
+    </padding>
+
+    <HBox alignment="CENTER_LEFT" spacing="20">
+        <Label text="%payment.title" styleClass="title-label"/>
+        <Region HBox.hgrow="ALWAYS" />
+        <Button text="%payment.add_new" onAction="#handleAddType" styleClass="button-success"/>
+    </HBox>
+
+    <TableView fx:id="typeTable" VBox.vgrow="ALWAYS" styleClass="modern-table">
+        <columns>
+            <TableColumn fx:id="idColumn" text="%column.id" prefWidth="50" />
+            <TableColumn fx:id="nameColumn" text="%payment.column_name" prefWidth="300" />
+        </columns>
+    </TableView>
+
+    <HBox spacing="15" alignment="CENTER_RIGHT">
+        <Button text="%payment.delete" onAction="#handleDeleteType" styleClass="button-danger"/>
+    </HBox>
+</VBox>

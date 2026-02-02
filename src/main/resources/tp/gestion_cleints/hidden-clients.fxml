@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox spacing="20" styleClass="content-pane" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tp.gestion_cleints.HiddenClientsController">
+    <padding>
+        <Insets top="30" right="40" bottom="30" left="40"/>
+    </padding>
+
+    <HBox alignment="CENTER_LEFT" spacing="20">
+        <Label text="Hidden Clients" styleClass="title-label"/>
+        <Region HBox.hgrow="ALWAYS" />
+        <TextField fx:id="searchField" promptText="Search hidden clients..." prefWidth="300" styleClass="search-field"/>
+    </HBox>
+
+    <TableView fx:id="clientTable" VBox.vgrow="ALWAYS" styleClass="modern-table">
+        <columns>
+            <TableColumn fx:id="idColumn" text="ID" prefWidth="50" />
+            <TableColumn fx:id="raisonSocialeColumn" text="Raison Sociale" prefWidth="250" />
+            <TableColumn fx:id="nomPrenomColumn" text="Nom &amp; Prénom" prefWidth="200" />
+            <TableColumn fx:id="villeColumn" text="Ville" prefWidth="120" />
+        </columns>
+    </TableView>
+
+    <HBox spacing="15" alignment="CENTER_RIGHT">
+        <Button text="Unhide Client" onAction="#handleUnhideClient" styleClass="button-primary"/>
+        <Button text="Back" onAction="#handleBack" styleClass="button-secondary"/>
+    </HBox>
+</VBox>

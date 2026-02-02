@@ -6,34 +6,70 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.MenuButton?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.SeparatorMenuItem?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
 
 <BorderPane fx:id="contentArea" xmlns:fx="http://javafx.com/fxml" 
             fx:controller="tp.gestion_cleints.MainController" 
             stylesheets="@styles.css">
-    <left>
-        <VBox styleClass="sidebar" prefWidth="200">
-            <VBox styleClass="sidebar-header" alignment="CENTER" spacing="10">
-                <javafx.scene.image.ImageView fitHeight="60" fitWidth="60" preserveRatio="true">
-                    <image>
-                        <javafx.scene.image.Image url="@images/logo.png"/>
-                    </image>
-                </javafx.scene.image.ImageView>
-                <Label text="%title" styleClass="title-label"/>
-            </VBox>
-            
-            <Button text="%nav.dashboard" styleClass="nav-button" maxWidth="Infinity" onAction="#showDashboard"/>
-            <Button text="%nav.clients" styleClass="nav-button" maxWidth="Infinity" onAction="#showClients"/>
+    <top>
+        <VBox styleClass="top-nav-container">
+            <!-- Main Navigation Bar -->
+            <HBox styleClass="main-nav" alignment="CENTER_LEFT" spacing="15">
+                <HBox alignment="CENTER" spacing="8" style="-fx-padding: 0 10;">
+                    <ImageView fitHeight="40" fitWidth="40" preserveRatio="true">
+                        <image>
+                            <Image url="@images/logo.png"/>
+                        </image>
+                    </ImageView>
+                    <Label text="%title" styleClass="title-label-small"/>
+                </HBox>
+                
+                <HBox spacing="5" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
+                    <Button text="%nav.dashboard" onAction="#showDashboard" styleClass="top-nav-button"/>
+                    
+                    <MenuButton fx:id="clientsMenu" text="%nav.clients" styleClass="top-nav-button">
+                        <items>
+                            <MenuItem text="%nav.view_clients" onAction="#showClients"/>
+                            <MenuItem text="%nav.client_summary" onAction="#showClientSummary"/>
+                            <MenuItem text="%nav.add_client" onAction="#handleAddClientFromNav"/>
+                            <SeparatorMenuItem/>
+                            <MenuItem text="%nav.hidden_clients" onAction="#showHiddenClients"/>
+                        </items>
+                    </MenuButton>
+                    
+                    <MenuButton fx:id="paymentsMenu" text="%nav.payments" styleClass="top-nav-button">
+                        <items>
+                            <MenuItem text="%nav.payment_types" onAction="#showPaymentTypes"/>
+                        </items>
+                    </MenuButton>
+                    
+                    <MenuButton fx:id="yearsMenu" text="%nav.years" styleClass="top-nav-button">
+                        <items>
+                            <MenuItem text="%nav.manage_years" onAction="#showYearManagement"/>
+                        </items>
+                    </MenuButton>
+                    
+                    <MenuButton fx:id="settingsMenu" text="%nav.settings" styleClass="top-nav-button">
+                        <items>
+                            <MenuItem text="%nav.admin_info" onAction="#showAdminSettings"/>
+                            <MenuItem text="%nav.security" onAction="#showSecurity"/>
+                        </items>
+                    </MenuButton>
+                </HBox>
 
-            <Button text="%nav.security" styleClass="nav-button" maxWidth="Infinity" onAction="#showSecurity"/>
-            <Button text="%nav.admin" styleClass="nav-button" maxWidth="Infinity" onAction="#showAdminSettings"/>
-            
-            <VBox VBox.vgrow="ALWAYS"/>
-            
-            <!-- Language Switcher -->
-            <HBox spacing="10" alignment="CENTER" style="-fx-padding: 15;">
-                <Button text="EN" onAction="#switchEnglish" styleClass="nav-button" style="-fx-padding: 5 10; -fx-border-width: 0;"/>
-                <Button text="FR" onAction="#switchFrench" styleClass="nav-button" style="-fx-padding: 5 10; -fx-border-width: 0;"/>
+                <HBox spacing="8" alignment="CENTER_RIGHT" style="-fx-padding: 0 10;">
+                    <MenuButton fx:id="currentYearMenu" text="Year: ----" styleClass="active-year-label"/>
+                    <Button text="EN" onAction="#switchEnglish" styleClass="lang-button"/>
+                    <Button text="FR" onAction="#switchFrench" styleClass="lang-button"/>
+                    <Button text="—" onAction="#handleMinimize" styleClass="window-control-button"/>
+                    <Button text="✕" onAction="#handleExit" styleClass="window-control-button" style="-fx-text-fill: #e74c3c;"/>
+                </HBox>
             </HBox>
+
         </VBox>
-    </left>
+    </top>
 </BorderPane>

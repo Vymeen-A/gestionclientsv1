@@ -44,6 +44,15 @@ public class PreviewDialog extends Dialog<Void> {
         getDialogPane().getStylesheets().add(getClass().getResource("/tp/gestion_cleints/styles.css").toExternalForm());
         getDialogPane().getStyleClass().add("preview-dialog");
 
+        // Set icon
+        try {
+            javafx.stage.Stage stage = (javafx.stage.Stage) getDialogPane().getScene().getWindow();
+            stage.getIcons().add(new javafx.scene.image.Image(
+                    getClass().getResourceAsStream("images/logo.png")));
+        } catch (Exception e) {
+            System.err.println("Could not load preview icon: " + e.getMessage());
+        }
+
         // Setup Toolbar
         ToolBar toolBar = createToolBar();
         getDialogPane().setHeader(toolBar);
@@ -232,7 +241,7 @@ public class PreviewDialog extends Dialog<Void> {
         showAndWait();
     }
 
-    public void showTransactionReceipt(Transaction t, Client c) {
+    public void showReceipt(Client c, Transaction t) {
         VBox content = new VBox(25);
         content.setPadding(new Insets(50));
         content.setStyle(
@@ -261,15 +270,24 @@ public class PreviewDialog extends Dialog<Void> {
         clientBox.getChildren().addAll(cLabel, cName, new Label("ICE: " + (c.getIce() != null ? c.getIce() : "-")));
         grid.add(clientBox, 0, 0);
 
-        // Right Column (Date)
-        VBox dateBox = new VBox(5);
-        dateBox.setAlignment(Pos.TOP_RIGHT);
+        // Right Column (Date / Receipt No)
+        VBox rightBox = new VBox(5);
+        rightBox.setAlignment(Pos.TOP_RIGHT);
+
+        if (t.getReceiptNumber() != null && !t.getReceiptNumber().isEmpty()) {
+            Label rnLabel = new Label("N° Reçu:");
+            rnLabel.setStyle("-fx-text-fill: #7f8c8d; -fx-font-size: 11px;");
+            Label rnVal = new Label(t.getReceiptNumber());
+            rnVal.setStyle("-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: #e74c3c;");
+            rightBox.getChildren().addAll(rnLabel, rnVal, new Region());
+        }
+
         Label dLabel = new Label("Date de paiement:");
-        dLabel.setStyle("-fx-text-fill: #7f8c8d; -fx-font-size: 12px;");
+        dLabel.setStyle("-fx-text-fill: #7f8c8d; -fx-font-size: 11px;");
         Label dVal = new Label(t.getDate());
         dVal.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
-        dateBox.getChildren().addAll(dLabel, dVal);
-        grid.add(dateBox, 1, 0);
+        rightBox.getChildren().addAll(dLabel, dVal);
+        grid.add(rightBox, 1, 0);
 
         GridPane.setHgrow(clientBox, Priority.ALWAYS);
         content.getChildren().add(grid);
@@ -356,7 +374,11 @@ public class PreviewDialog extends Dialog<Void> {
 
         for (Transaction t : transactions) {
             Label d = new Label(t.getDate());
-            Label n = new Label(t.getNotes());
+            String desc = t.getNotes();
+            if (t.getReceiptNumber() != null && !t.getReceiptNumber().isEmpty()) {
+                desc = "(N° " + t.getReceiptNumber() + ") " + desc;
+            }
+            Label n = new Label(desc);
             n.setPrefWidth(300);
             n.setWrapText(true);
             Label a = new Label(String.format("%.2f %s", t.getAmount(), currency));

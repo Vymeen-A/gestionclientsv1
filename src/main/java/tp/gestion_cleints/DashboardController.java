@@ -41,6 +41,7 @@ public class DashboardController {
 
     public void initialize() {
         clientDAO = new ClientDAO();
+        // stats are loaded in refresh() which is called by MainController
     }
 
     public void refresh() {

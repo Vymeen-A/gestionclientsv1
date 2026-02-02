@@ -4,9 +4,23 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.ResultSet;
 
 public class DatabaseManager {
-    private static final String DB_URL = "jdbc:sqlite:gestion_clients.db";
+    private static final String DB_PATH;
+    private static final String DB_URL;
+
+    static {
+        String userHome = System.getProperty("user.home");
+        String appDataPath = userHome + "/.gestion_clients";
+        java.io.File directory = new java.io.File(appDataPath);
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+        DB_PATH = appDataPath + "/gestion_clients.db";
+        DB_URL = "jdbc:sqlite:" + DB_PATH;
+        System.out.println("Database path: " + DB_PATH);
+    }
 
     public static Connection getConnection() throws SQLException {
         try {
@@ -21,6 +35,38 @@ public class DatabaseManager {
     public static void initializeDatabase() {
         try (Connection conn = getConnection();
                 Statement stmt = conn.createStatement()) {
+
+            // Create years table
+            String createYearsTable = "CREATE TABLE IF NOT EXISTS years ("
+                    + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    + "name TEXT UNIQUE, "
+                    + "soft_deleted BOOLEAN DEFAULT 0, "
+                    + "deleted_at TEXT"
+                    + ");";
+            stmt.execute(createYearsTable);
+
+            // Ensure a default year exists (e.g. current year or 2025) if table is empty
+            ResultSet rsYears = stmt.executeQuery("SELECT COUNT(*) FROM years");
+            if (rsYears.next() && rsYears.getInt(1) == 0) {
+                stmt.execute("INSERT INTO years (name) VALUES ('2025')");
+            }
+            rsYears.close();
+
+            // Create payment_types table
+            String createPaymentTypesTable = "CREATE TABLE IF NOT EXISTS payment_types ("
+                    + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    + "name TEXT UNIQUE"
+                    + ");";
+            stmt.execute(createPaymentTypesTable);
+
+            // Seed default payment types if empty
+            ResultSet rsPT = stmt.executeQuery("SELECT COUNT(*) FROM payment_types");
+            if (rsPT.next() && rsPT.getInt(1) == 0) {
+                stmt.execute("INSERT INTO payment_types (name) VALUES ('Cash')");
+                stmt.execute("INSERT INTO payment_types (name) VALUES ('Check')");
+                stmt.execute("INSERT INTO payment_types (name) VALUES ('Bank Transfer')");
+            }
+            rsPT.close();
 
             // Create clients table with all fields if it doesn't exist
             String createClientsTable = "CREATE TABLE IF NOT EXISTS clients ("
@@ -43,7 +89,10 @@ public class DatabaseManager {
                     + "secteur TEXT, "
                     + "debut_act TEXT, "
                     + "fixed_total_amount REAL DEFAULT 0.0, "
-                    + "ttc REAL DEFAULT 0.0"
+                    + "ttc REAL DEFAULT 0.0, "
+                    + "is_hidden BOOLEAN DEFAULT 0, "
+                    + "year_id INTEGER, "
+                    + "FOREIGN KEY(year_id) REFERENCES years(id)"
                     + ");";
             stmt.execute(createClientsTable);
 
@@ -55,7 +104,11 @@ public class DatabaseManager {
                     + "date TEXT, "
                     + "notes TEXT, "
                     + "type TEXT, "
-                    + "FOREIGN KEY(client_id) REFERENCES clients(id)"
+                    + "payment_type_id INTEGER, "
+                    + "year_id INTEGER, "
+                    + "FOREIGN KEY(client_id) REFERENCES clients(id), "
+                    + "FOREIGN KEY(payment_type_id) REFERENCES payment_types(id), "
+                    + "FOREIGN KEY(year_id) REFERENCES years(id)"
                     + ");";
             stmt.execute(createTransactionsTable);
 
@@ -64,7 +117,9 @@ public class DatabaseManager {
                     + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
                     + "description TEXT, "
                     + "amount REAL, "
-                    + "date TEXT"
+                    + "date TEXT, "
+                    + "year_id INTEGER, "
+                    + "FOREIGN KEY(year_id) REFERENCES years(id)"
                     + ");";
             stmt.execute(createExpensesTable);
 
@@ -92,36 +147,41 @@ public class DatabaseManager {
                     + ");";
             stmt.execute(createAdminInfoTable);
 
+            // Create client_year_data table for year-specific financial data
+            String createClientYearDataTable = "CREATE TABLE IF NOT EXISTS client_year_data ("
+                    + "client_id INTEGER, "
+                    + "year_id INTEGER, "
+                    + "fixed_total_amount REAL DEFAULT 0.0, "
+                    + "ttc REAL DEFAULT 0.0, "
+                    + "PRIMARY KEY(client_id, year_id), "
+                    + "FOREIGN KEY(client_id) REFERENCES clients(id) ON DELETE CASCADE, "
+                    + "FOREIGN KEY(year_id) REFERENCES years(id) ON DELETE CASCADE"
+                    + ");";
+            stmt.execute(createClientYearDataTable);
+
+            // Migrate data: if clients has amount and ttc, and they aren't in
+            // client_year_data yet
+            stmt.execute("INSERT OR IGNORE INTO client_year_data (client_id, year_id, fixed_total_amount, ttc) "
+                    + "SELECT id, year_id, fixed_total_amount, ttc FROM clients WHERE year_id IS NOT NULL");
+
             // Ensure one row exists
             stmt.execute("INSERT OR IGNORE INTO admin_info (id) VALUES (1)");
 
-            // Insert default administrator if not exists (default password 'admin')
-            // Using a plain password for now, will be updated to hash in the
-            // LoginController/UserDAO
-            String checkAdmin = "SELECT COUNT(*) FROM users WHERE username = 'administrator'";
-            java.sql.ResultSet rs = stmt.executeQuery(checkAdmin);
+            // Check admin existence (simplified)
+            String checkAdmin = "SELECT COUNT(*) FROM users WHERE username = 'admin'";
+            ResultSet rs = stmt.executeQuery(checkAdmin);
             if (rs.next() && rs.getInt(1) == 0) {
-                // BCrypt hash for 'admin'
-                String defaultHash = "$2a$12$R9h/lIPzHZ7C53fO.W.9Cuj/8.u.u.u.u.u.u.u.u.u.u.u.u.u."; // This is a
-                                                                                                    // placeholder,
-                                                                                                    // UserDAO should
-                                                                                                    // handle this
-                                                                                                    // properly.
-                // Actually, I'll let the application handle the first-time setup or use a known
-                // hash.
-                // For simplicity in this step, I'll just ensure the table exists.
+                // Placeholder for admin creation if needed
             }
+            rs.close();
 
-            // Migrating existing data if necessary (adding missing columns to existing
-            // clients table)
-            // Note: In SQLite, adding multiple columns in one ALTER TABLE isn't supported
-            // in old versions,
-            // but we can try adding them one by one if they don't exist.
+            // Migrating existing data
             String[] newCols = {
                     "raison_sociale TEXT", "nom_prenom TEXT", "adresse TEXT", "ville TEXT", "ice TEXT", "rc TEXT",
                     "tp TEXT", "taxe_habit TEXT", "tva TEXT", "regime_tva TEXT", "fax TEXT",
                     "email TEXT", "rib TEXT", "username TEXT", "password TEXT", "secteur TEXT", "debut_act TEXT",
-                    "fixed_total_amount REAL DEFAULT 0.0", "ttc REAL DEFAULT 0.0"
+                    "fixed_total_amount REAL DEFAULT 0.0", "ttc REAL DEFAULT 0.0",
+                    "is_hidden BOOLEAN DEFAULT 0", "year_id INTEGER"
             };
 
             for (String col : newCols) {
@@ -132,13 +192,33 @@ public class DatabaseManager {
                 }
             }
 
+            // Migrate transactions: add payment_type_id and year_id
+            try {
+                stmt.execute("ALTER TABLE transactions ADD COLUMN payment_type_id INTEGER");
+            } catch (SQLException e) {
+            }
+            try {
+                stmt.execute("ALTER TABLE transactions ADD COLUMN year_id INTEGER");
+            } catch (SQLException e) {
+            }
+
+            // Migrate expenses: add year_id
+            try {
+                stmt.execute("ALTER TABLE expenses ADD COLUMN year_id INTEGER");
+            } catch (SQLException e) {
+            }
+
             // Migrate transactions table (add type)
             try {
                 stmt.execute("ALTER TABLE transactions ADD COLUMN type TEXT");
-                // Update existing records to be PAYMENT by default
                 stmt.execute("UPDATE transactions SET type = 'PAYMENT' WHERE type IS NULL");
             } catch (SQLException e) {
-                // Column likely exists
+            }
+
+            // Migrate transactions table (add receipt_number)
+            try {
+                stmt.execute("ALTER TABLE transactions ADD COLUMN receipt_number TEXT");
+            } catch (SQLException e) {
             }
 
             // Data Migration for old clients
@@ -146,19 +226,27 @@ public class DatabaseManager {
                 stmt.execute(
                         "UPDATE clients SET raison_sociale = name WHERE (raison_sociale IS NULL OR raison_sociale = '') AND name IS NOT NULL");
             } catch (SQLException e) {
-                /* 'name' column might not exist */ }
+            }
 
             try {
                 stmt.execute(
                         "UPDATE clients SET adresse = address WHERE (adresse IS NULL OR adresse = '') AND address IS NOT NULL");
             } catch (SQLException e) {
-                /* 'address' column might not exist */ }
+            }
 
             try {
                 stmt.execute(
                         "UPDATE clients SET fixed_total_amount = revenue WHERE (fixed_total_amount = 0.0) AND revenue IS NOT NULL");
             } catch (SQLException e) {
-                /* 'revenue' column might not exist */ }
+            }
+
+            // Assign default year to existing data
+            try {
+                stmt.execute("UPDATE clients SET year_id = 1 WHERE year_id IS NULL");
+                stmt.execute("UPDATE transactions SET year_id = 1 WHERE year_id IS NULL");
+                stmt.execute("UPDATE expenses SET year_id = 1 WHERE year_id IS NULL");
+            } catch (SQLException e) {
+            }
 
             System.out.println("Database initialized and data migrated.");
         } catch (SQLException e) {

@@ -4,37 +4,90 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
+import javafx.scene.control.*;
 import javafx.stage.Stage;
+import java.util.ResourceBundle;
+import java.util.Locale;
 
 public class LoginController {
 
     @FXML
     private PasswordField passwordField;
     @FXML
+    private TextField passwordTextField;
+    @FXML
+    private Button togglePasswordButton;
+    @FXML
     private Label errorLabel;
+    @FXML
+    private ComboBox<Year> yearComboBox;
 
     private UserDAO userDAO = new UserDAO();
-    private java.util.ResourceBundle bundle;
+    private YearDAO yearDAO = new YearDAO();
+    private ResourceBundle bundle;
 
     @FXML
     public void initialize() {
-        // Default to English if not specified, or use system default
-        bundle = java.util.ResourceBundle.getBundle("tp.gestion_cleints.messages", java.util.Locale.getDefault());
+        bundle = ResourceBundle.getBundle("tp.gestion_cleints.messages", Locale.getDefault());
+
+        // Sync password field and text field
+        passwordField.textProperty().bindBidirectional(passwordTextField.textProperty());
+
+        // Load Years
+        loadYears();
+    }
+
+    private void loadYears() {
+        yearComboBox.setItems(javafx.collections.FXCollections.observableArrayList(yearDAO.getAllYears()));
+        yearComboBox.setCellFactory(lv -> new ListCell<Year>() {
+            @Override
+            protected void updateItem(Year item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty ? null : item.getName());
+            }
+        });
+        yearComboBox.setButtonCell(new ListCell<Year>() {
+            @Override
+            protected void updateItem(Year item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty ? null : item.getName());
+            }
+        });
+
+        // Select first if available
+        if (!yearComboBox.getItems().isEmpty()) {
+            yearComboBox.getSelectionModel().select(0);
+        }
+    }
+
+    @FXML
+    private void togglePasswordVisibility() {
+        if (passwordField.isVisible()) {
+            passwordField.setVisible(false);
+            passwordField.setManaged(false);
+            passwordTextField.setVisible(true);
+            passwordTextField.setManaged(true);
+            togglePasswordButton.setText("🔒");
+            passwordTextField.requestFocus();
+        } else {
+            passwordField.setVisible(true);
+            passwordField.setManaged(true);
+            passwordTextField.setVisible(false);
+            passwordTextField.setManaged(false);
+            togglePasswordButton.setText("👁");
+            passwordField.requestFocus();
+        }
     }
 
     @FXML
     private void handleResetPassword() {
-        javafx.scene.control.Alert alert = new javafx.scene.control.Alert(
-                javafx.scene.control.Alert.AlertType.CONFIRMATION);
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle(bundle.getString("login.btn_reset"));
         alert.setHeaderText(bundle.getString("login.btn_reset"));
-        alert.setContentText(bundle.getString("alert.delete_content").replace("{0}", "password")); // A bit hacky but
-                                                                                                   // works for now
+        alert.setContentText(bundle.getString("alert.delete_content").replace("{0}", "password"));
 
-        if (alert.showAndWait().get() == javafx.scene.control.ButtonType.OK) {
-            userDAO.updatePassword("administrator", "admin");
+        if (alert.showAndWait().get() == ButtonType.OK) {
+            userDAO.updatePassword("admin", "admin");
             errorLabel.setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold;");
             errorLabel.setText(bundle.getString("login.success_reset"));
         }
@@ -43,7 +96,16 @@ public class LoginController {
     @FXML
     private void handleLogin() {
         String password = passwordField.getText();
-        if (userDAO.authenticate("administrator", password)) {
+        Year selectedYear = yearComboBox.getValue();
+
+        if (selectedYear == null) {
+            errorLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold;");
+            errorLabel.setText(bundle.getString("nav.select_year"));
+            return;
+        }
+
+        if (userDAO.authenticate("admin", password)) {
+            SessionContext.getInstance().setCurrentYear(selectedYear);
             loadMainApp();
         } else {
             errorLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold;");
@@ -53,17 +115,15 @@ public class LoginController {
 
     private void loadMainApp() {
         try {
-            // Main app needs the resource bundle for translations
-            java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("tp.gestion_cleints.messages",
-                    java.util.Locale.ENGLISH);
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("main-layout.fxml"), bundle);
+            ResourceBundle appBundle = ResourceBundle.getBundle("tp.gestion_cleints.messages", Locale.getDefault());
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("main-layout.fxml"), appBundle);
             Parent root = loader.load();
 
             Stage stage = (Stage) passwordField.getScene().getWindow();
             stage.setTitle("Gestion Clients - Dashboard");
-            stage.setScene(new Scene(root, 1000, 700));
+            stage.setScene(new Scene(root));
+            stage.setMaximized(true);
             stage.setResizable(true);
-            stage.centerOnScreen();
 
             // Maintain window icon
             try {
@@ -80,5 +140,16 @@ public class LoginController {
             e.printStackTrace();
             errorLabel.setText("System error: Could not load application.");
         }
+    }
+
+    @FXML
+    private void handleMinimize() {
+        ((Stage) passwordField.getScene().getWindow()).setIconified(true);
+    }
+
+    @FXML
+    private void handleExit() {
+        javafx.application.Platform.exit();
+        System.exit(0);
     }
 }

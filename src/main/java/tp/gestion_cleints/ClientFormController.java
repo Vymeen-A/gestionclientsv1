@@ -53,6 +53,13 @@ public class ClientFormController {
     public void initialize() {
         clientDAO = new ClientDAO();
         bundle = java.util.ResourceBundle.getBundle("tp.gestion_cleints.messages", java.util.Locale.getDefault());
+
+        // Add 15 character constraint to ICE field
+        iceField.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null && newValue.length() > 15) {
+                iceField.setText(oldValue);
+            }
+        });
     }
 
     public void setClient(Client client) {
@@ -88,6 +95,12 @@ public class ClientFormController {
             return;
         }
 
+        String ice = iceField.getText();
+        if (ice != null && !ice.trim().isEmpty() && ice.length() != 15) {
+            showAlert(bundle.getString("alert.validation_error"), "I.C.E must be exactly 15 characters.");
+            return;
+        }
+
         double amount = 0.0;
         try {
             if (!fixedTotalAmountField.getText().isEmpty()) {
@@ -110,12 +123,15 @@ public class ClientFormController {
 
         boolean success;
         if (currentClient == null) {
+            int yearId = SessionContext.getInstance().getCurrentYear() != null
+                    ? SessionContext.getInstance().getCurrentYear().getId()
+                    : 1;
             Client newClient = new Client(0, raison, nomPrenomField.getText(), adresseField.getText(),
                     villeField.getText(), iceField.getText(), rcField.getText(), tpField.getText(),
                     taxeHabitField.getText(), tvaField.getText(), regimeTvaField.getText(),
                     faxField.getText(), emailField.getText(),
                     ribField.getText(), usernameField.getText(), passwordField.getText(), secteurField.getText(),
-                    debutActField.getText(), amount, ttc);
+                    debutActField.getText(), amount, ttc, yearId, false);
             success = clientDAO.addClient(newClient);
         } else {
             currentClient.setRaisonSociale(raison);
@@ -153,11 +169,6 @@ public class ClientFormController {
         alert.setHeaderText(null);
         alert.setContentText(content);
         alert.showAndWait();
-    }
-
-    @FXML
-    private void handleUpdateTtc() {
-        // This can be used for auto-calculation if needed later
     }
 
     @FXML

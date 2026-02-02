@@ -21,11 +21,14 @@ public class Client {
     private String debutAct;
     private double fixedTotalAmount;
     private double ttc;
+    private int yearId;
+    private boolean isHidden;
 
     public Client(int id, String raisonSociale, String nomPrenom, String adresse, String ville,
             String ice, String rc, String tp, String taxeHabit, String tva,
             String regimeTva, String fax, String email, String rib,
-            String username, String password, String secteur, String debutAct, double fixedTotalAmount, double ttc) {
+            String username, String password, String secteur, String debutAct,
+            double fixedTotalAmount, double ttc, int yearId, boolean isHidden) {
         this.id = id;
         this.raisonSociale = raisonSociale;
         this.nomPrenom = nomPrenom;
@@ -46,6 +49,8 @@ public class Client {
         this.debutAct = debutAct;
         this.fixedTotalAmount = fixedTotalAmount;
         this.ttc = ttc;
+        this.yearId = yearId;
+        this.isHidden = isHidden;
     }
 
     // Getters and Setters
@@ -207,5 +212,21 @@ public class Client {
 
     public void setTtc(double ttc) {
         this.ttc = ttc;
+    }
+
+    public int getYearId() {
+        return yearId;
+    }
+
+    public void setYearId(int yearId) {
+        this.yearId = yearId;
+    }
+
+    public boolean isHidden() {
+        return isHidden;
+    }
+
+    public void setHidden(boolean hidden) {
+        isHidden = hidden;
     }
 }

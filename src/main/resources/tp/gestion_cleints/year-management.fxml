@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox spacing="20" styleClass="content-pane" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tp.gestion_cleints.YearManagementController">
+    <padding>
+        <Insets top="30" right="40" bottom="30" left="40"/>
+    </padding>
+
+    <HBox alignment="CENTER_LEFT" spacing="20">
+        <Label text="%year.title" styleClass="title-label"/>
+        <Region HBox.hgrow="ALWAYS" />
+        <Button text="%year.add_new" onAction="#handleAddYear" styleClass="button-success"/>
+    </HBox>
+
+    <TabPane VBox.vgrow="ALWAYS" tabClosingPolicy="UNAVAILABLE">
+        <tabs>
+            <!-- Active Years Tab -->
+            <Tab text="%year.active_tab">
+                <VBox spacing="15">
+                    <padding>
+                        <Insets top="15" right="0" bottom="0" left="0"/>
+                    </padding>
+                    <TableView fx:id="yearTable" VBox.vgrow="ALWAYS" styleClass="modern-table">
+                        <columns>
+                            <TableColumn fx:id="idColumn" text="%column.id" prefWidth="50" />
+                            <TableColumn fx:id="nameColumn" text="%year.column_name" prefWidth="250" />
+                        </columns>
+                        <columnResizePolicy>
+                            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+                        </columnResizePolicy>
+                    </TableView>
+                    <HBox spacing="15" alignment="CENTER_RIGHT">
+                        <Button text="%year.set_active" onAction="#handleSetActive" styleClass="button-primary"/>
+                        <Button text="%year.delete_bin" onAction="#handleDeleteYear" styleClass="button-danger"/>
+                    </HBox>
+                </VBox>
+            </Tab>
+
+            <!-- Recycle Bin Tab -->
+            <Tab text="%year.bin_tab">
+                <VBox spacing="15">
+                    <padding>
+                        <Insets top="15" right="0" bottom="0" left="0"/>
+                    </padding>
+                    <TableView fx:id="deletedYearTable" VBox.vgrow="ALWAYS" styleClass="modern-table">
+                        <columns>
+                            <TableColumn fx:id="deletedIdColumn" text="%column.id" prefWidth="50" />
+                            <TableColumn fx:id="deletedNameColumn" text="%year.column_name" prefWidth="200" />
+                            <TableColumn fx:id="deletedAtColumn" text="%year.column_deleted_at" prefWidth="200" />
+                        </columns>
+                        <columnResizePolicy>
+                            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+                        </columnResizePolicy>
+                    </TableView>
+                    <HBox spacing="15" alignment="CENTER_RIGHT">
+                        <Button text="%year.restore" onAction="#handleRestoreYear" styleClass="button-success"/>
+                    </HBox>
+                </VBox>
+            </Tab>
+        </tabs>
+    </TabPane>
+</VBox>

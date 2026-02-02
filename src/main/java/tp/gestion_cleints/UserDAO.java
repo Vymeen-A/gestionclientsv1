@@ -42,7 +42,7 @@ public class UserDAO {
 
     public void ensureAdminExists(String defaultPassword) {
         boolean exists = false;
-        String sql = "SELECT COUNT(*) FROM users WHERE username = 'administrator'";
+        String sql = "SELECT COUNT(*) FROM users WHERE username = 'admin'";
         try (Connection conn = getConnection();
                 Statement stmt = conn.createStatement();
                 ResultSet rs = stmt.executeQuery(sql)) {
@@ -54,7 +54,7 @@ public class UserDAO {
         }
 
         if (!exists) {
-            updatePassword("administrator", defaultPassword);
+            updatePassword("admin", defaultPassword);
             System.out.println("Default administrator created with password: " + defaultPassword);
         }
     }

@@ -145,6 +145,13 @@ public class PdfExporter {
         receiptTitle.setAlignment(Element.ALIGN_LEFT);
         receiptTitle.setSpacingBefore(-15);
         document.add(receiptTitle);
+
+        if (t.getReceiptNumber() != null && !t.getReceiptNumber().trim().isEmpty()) {
+            Paragraph receiptNo = new Paragraph("N°: " + t.getReceiptNumber(), subTitleFont);
+            receiptNo.setAlignment(Element.ALIGN_LEFT);
+            document.add(receiptNo);
+        }
+
         document.add(new Paragraph("________________________________________________", smallFont));
 
         // Client Info Block
@@ -297,7 +304,11 @@ public class PdfExporter {
         double total = 0;
         for (Transaction t : transactions) {
             table.addCell(new Phrase(t.getDate(), normalFont));
-            table.addCell(new Phrase(t.getNotes(), normalFont));
+            String designation = t.getNotes();
+            if (t.getReceiptNumber() != null && !t.getReceiptNumber().isEmpty()) {
+                designation = "(N° " + t.getReceiptNumber() + ") " + designation;
+            }
+            table.addCell(new Phrase(designation, normalFont));
             PdfPCell mCell = new PdfPCell(new Phrase(String.format("%.2f %s", t.getAmount(), currency), normalFont));
             mCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
             table.addCell(mCell);

@@ -32,7 +32,7 @@
             <TextField fx:id="villeField" GridPane.columnIndex="1" GridPane.rowIndex="3" promptText="%client.ville"/>
 
             <Label text="%client.ice" GridPane.columnIndex="0" GridPane.rowIndex="4" styleClass="summary-label-title"/>
-            <TextField fx:id="iceField" GridPane.columnIndex="1" GridPane.rowIndex="4" promptText="Registration Number"/>
+            <TextField fx:id="iceField" GridPane.columnIndex="1" GridPane.rowIndex="4" promptText="%prompt.registration_number"/>
 
             <Label text="%client.rc" GridPane.columnIndex="0" GridPane.rowIndex="5" styleClass="summary-label-title"/>
             <TextField fx:id="rcField" GridPane.columnIndex="1" GridPane.rowIndex="5"/>

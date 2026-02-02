@@ -19,21 +19,22 @@
         <HBox spacing="10" alignment="CENTER_LEFT">
             <Button text="%btn.add_client" onAction="#handleAddClient" styleClass="button-primary"/>
             <Button text="%btn.edit" onAction="#handleEditClient" styleClass="button-secondary"/>
-            <Button text="Details" onAction="#handleViewDetails" styleClass="button-secondary"/>
+            <Button text="%btn.details" onAction="#handleViewDetails" styleClass="button-secondary"/>
             <Button text="%btn.delete" onAction="#handleDeleteClient" styleClass="button-danger"/>
             <Region HBox.hgrow="ALWAYS"/>
-            <Button text="Preview Report" onAction="#handlePreviewPdf" styleClass="button-secondary"/>
-            <Button text="Export Report" onAction="#handleExportPdf" styleClass="button-secondary"/>
+            <Button text="%btn.export_data" onAction="#handleExportData" styleClass="button-secondary"/>
+            <Button text="%btn.import_data" onAction="#handleImportData" styleClass="button-secondary"/>
         </HBox>
 
         <TableView fx:id="clientTable" prefHeight="500">
             <columns>
-                <TableColumn fx:id="idColumn" text="ID" prefWidth="50"/>
-                <TableColumn fx:id="raisonSocialeColumn" text="Raison Sociale" prefWidth="250"/>
-                <TableColumn fx:id="nomPrenomColumn" text="Nom et Prénom" prefWidth="200"/>
-                <TableColumn fx:id="villeColumn" text="Ville" prefWidth="120"/>
-                <TableColumn fx:id="fixedAmountColumn" text="HT" prefWidth="120"/>
-                <TableColumn fx:id="ttcColumn" text="TTC" prefWidth="120"/>
+                <TableColumn fx:id="idColumn" text="%column.id" prefWidth="50"/>
+                <TableColumn fx:id="raisonSocialeColumn" text="%column.raison_sociale" prefWidth="250"/>
+                <TableColumn fx:id="nomPrenomColumn" text="%column.nom_prenom" prefWidth="200"/>
+                <TableColumn fx:id="villeColumn" text="%column.ville" prefWidth="120"/>
+                <TableColumn fx:id="fixedAmountColumn" text="%column.ht" prefWidth="120"/>
+                <TableColumn fx:id="ttcColumn" text="%column.ttc" prefWidth="120"/>
+                <TableColumn fx:id="actionsColumn" text="%column.action" prefWidth="100"/>
             </columns>
             <columnResizePolicy>
                 <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
