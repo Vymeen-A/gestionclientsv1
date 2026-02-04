@@ -14,6 +14,8 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.transform.Scale;
 import javafx.stage.FileChooser;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
@@ -60,7 +62,7 @@ public class PreviewDialog extends Dialog<Void> {
         getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
         Node closeBtn = getDialogPane().lookupButton(ButtonType.CLOSE);
         if (closeBtn != null)
-            closeBtn.setVisible(false);
+            closeBtn.setVisible(false); // Hide standard button, use toolbar door button
 
         getDialogPane().setPrefSize(700, 900);
     }
@@ -70,47 +72,47 @@ public class PreviewDialog extends Dialog<Void> {
         printerSelector = new ComboBox<>();
         printerSelector.setItems(FXCollections.observableArrayList(Printer.getAllPrinters()));
         printerSelector.setValue(Printer.getDefaultPrinter());
-        printerSelector.setCellFactory(lv -> new ListCell<Printer>() {
-            @Override
-            protected void updateItem(Printer item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? "" : item.getName());
-            }
-        });
-        printerSelector.setButtonCell(new ListCell<Printer>() {
-            @Override
-            protected void updateItem(Printer item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? "" : item.getName());
-            }
-        });
-        printerSelector.setPrefWidth(250);
+        printerSelector.setStyle("-fx-font-size: 11px;");
+        printerSelector.setPrefWidth(180); // Reduced width
+        printerSelector.setMinWidth(120);
 
         // Buttons
-        printButton = new Button("Imprimer");
-        printButton.getStyleClass().add("button-primary"); // Use app theme class
+        printButton = new Button("🖨️ Imprimer");
+        printButton.setStyle("-fx-font-size: 11px; -fx-padding: 5 10;");
+        printButton.getStyleClass().add("button-primary");
         printButton.setOnAction(e -> handlePrint());
+        printButton.setMinWidth(Region.USE_PREF_SIZE);
 
-        exportButton = new Button("Exporter PDF");
-        exportButton.getStyleClass().add("button-action"); // Use app theme class
+        exportButton = new Button("📥 PDF");
+        exportButton.setStyle("-fx-font-size: 11px; -fx-padding: 5 10;");
+        exportButton.getStyleClass().add("button-action");
         exportButton.setOnAction(e -> handleExport());
+        exportButton.setMinWidth(Region.USE_PREF_SIZE);
 
-        cancelButton = new Button("Fermer");
-        cancelButton.getStyleClass().add("button-secondary");
-        cancelButton.setOnAction(e -> close());
+        cancelButton = new Button("❌");
+        cancelButton.setStyle("-fx-font-size: 14px; -fx-padding: 5 12; -fx-font-weight: bold;");
+        cancelButton.getStyleClass().add("button-danger");
+        cancelButton.setOnAction(e -> {
+            setResult(null);
+            close();
+        });
+        cancelButton.setMinWidth(Region.USE_PREF_SIZE);
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
+        Label pLabel = new Label("Imp:");
+        pLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #7f8c8d;");
+
         ToolBar tb = new ToolBar(
-                new Label("Imprimante: "),
+                pLabel,
                 printerSelector,
                 printButton,
                 new Separator(),
                 exportButton,
                 spacer,
                 cancelButton);
-        tb.setPadding(new Insets(10));
+        tb.setPadding(new Insets(5));
         tb.setStyle("-fx-background-color: #f8f9fa; -fx-border-color: #eeeeee; -fx-border-width: 0 0 1 0;");
         return tb;
     }
@@ -302,9 +304,29 @@ public class PreviewDialog extends Dialog<Void> {
 
         Label amtLabel = new Label(String.format("%.2f %s", t.getAmount(), bundle.getString("currency")));
         amtLabel.setStyle("-fx-font-size: 38px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+        amtLabel.setWrapText(false); // We want it on one line if possible
+        amtLabel.setMinWidth(Region.USE_PREF_SIZE); // Don't truncate
 
         amountBox.getChildren().addAll(new Label("MONTANT TOTAL"), amtLabel);
+
+        // Payment Mode
+        String ptName = getPaymentTypeName(t.getPaymentTypeId());
+        if (ptName != null) {
+            Label ptLabel = new Label("Mode de paiement: " + ptName);
+            ptLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #27ae60; -fx-font-size: 14px;");
+            amountBox.getChildren().add(ptLabel);
+        }
+
         content.getChildren().add(amountBox);
+
+        // Amount in French words
+        String amountInWords = NumberToFrenchWords.convert(t.getAmount(), bundle.getString("currency"));
+        Label wordsLabel = new Label("Montant en lettres: " + amountInWords);
+        wordsLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #555555; -fx-font-style: italic; -fx-padding: 10 0;");
+        wordsLabel.setWrapText(true);
+        wordsLabel.setMaxWidth(Double.MAX_VALUE);
+        wordsLabel.setAlignment(Pos.CENTER);
+        content.getChildren().add(wordsLabel);
 
         // Notes
         VBox notesBox = new VBox(5);
@@ -351,38 +373,73 @@ public class PreviewDialog extends Dialog<Void> {
         infoCard.getChildren().add(clientSec);
         content.getChildren().add(infoCard);
 
-        // Transactions Table
+        // Transactions Table with Running Balance
         GridPane table = new GridPane();
         table.setHgap(20);
         table.setVgap(10);
 
         // Headers with bottom border
         Label h1 = new Label("DATE");
-        h1.setStyle("-fx-font-weight: bold; -fx-border-color: #cfd8dc; -fx-border-width: 0 0 2 0;");
+        h1.setMinWidth(Region.USE_PREF_SIZE);
+        h1.setStyle("-fx-font-weight: bold; -fx-border-color: #cfd8dc; -fx-border-width: 0 0 2 0; -fx-padding: 5;");
         Label h2 = new Label("DESCRIPTION");
-        h2.setStyle("-fx-font-weight: bold; -fx-border-color: #cfd8dc; -fx-border-width: 0 0 2 0;");
+        h2.setMinWidth(Region.USE_PREF_SIZE);
+        h2.setStyle("-fx-font-weight: bold; -fx-border-color: #cfd8dc; -fx-border-width: 0 0 2 0; -fx-padding: 5;");
         Label h3 = new Label("MONTANT");
-        h3.setStyle("-fx-font-weight: bold; -fx-border-color: #cfd8dc; -fx-border-width: 0 0 2 0;");
+        h3.setMinWidth(Region.USE_PREF_SIZE);
+        h3.setStyle("-fx-font-weight: bold; -fx-border-color: #cfd8dc; -fx-border-width: 0 0 2 0; -fx-padding: 5;");
+        Label h4 = new Label("SOLDE RESTANT");
+        h4.setMinWidth(Region.USE_PREF_SIZE);
+        h4.setStyle("-fx-font-weight: bold; -fx-border-color: #cfd8dc; -fx-border-width: 0 0 2 0; -fx-padding: 5;");
 
         table.add(h1, 0, 0);
         table.add(h2, 1, 0);
         table.add(h3, 2, 0);
+        table.add(h4, 3, 0);
 
         String currency = bundle.getString("currency");
-        double total = 0;
+
+        // Reverse transactions to show oldest first for running balance
+        List<Transaction> chronologicalTransactions = new ArrayList<>(transactions);
+        Collections.reverse(chronologicalTransactions);
+
+        // Calculate running balance
+        // Use TTC as base
+        double baseAmount = c.getTtc() > 0 ? c.getTtc() : c.getFixedTotalAmount();
+        double runningBalance = baseAmount; // Start with initial total
         int row = 1;
 
-        for (Transaction t : transactions) {
+        for (Transaction t : chronologicalTransactions) {
             Label d = new Label(t.getDate());
+            d.setMinWidth(Region.USE_PREF_SIZE);
             String desc = t.getNotes();
             if (t.getReceiptNumber() != null && !t.getReceiptNumber().isEmpty()) {
                 desc = "(N° " + t.getReceiptNumber() + ") " + desc;
             }
+            String ptName = getPaymentTypeName(t.getPaymentTypeId());
+            if (ptName != null && Transaction.TYPE_PAYMENT.equals(t.getType())) {
+                desc += " [" + ptName + "]";
+            }
             Label n = new Label(desc);
-            n.setPrefWidth(300);
+            n.setPrefWidth(350); // Increased width
             n.setWrapText(true);
+            n.setMinWidth(250); // Minimum width to avoid squishing
             Label a = new Label(String.format("%.2f %s", t.getAmount(), currency));
+            a.setMinWidth(Region.USE_PREF_SIZE);
             a.setStyle("-fx-font-family: 'Consolas'; -fx-font-weight: bold;");
+
+            // Update running balance based on transaction type
+            if (Transaction.TYPE_PAYMENT.equals(t.getType())) {
+                runningBalance -= t.getAmount();
+            } else {
+                runningBalance += t.getAmount();
+            }
+
+            // Running balance label
+            Label balance = new Label(String.format("%.2f %s", runningBalance, currency));
+            balance.setMinWidth(Region.USE_PREF_SIZE); // Prevent dots
+            balance.setStyle(
+                    "-fx-font-family: 'Consolas'; -fx-font-weight: bold; -fx-text-fill: #2e7d32; -fx-background-color: #e8f5e9; -fx-padding: 5; -fx-background-radius: 3;");
 
             // Add light grey decoration for rows
             String style = "-fx-padding: 5 0; -fx-border-color: #eceff1; -fx-border-width: 0 0 1 0;";
@@ -393,24 +450,40 @@ public class PreviewDialog extends Dialog<Void> {
             table.add(d, 0, row);
             table.add(n, 1, row);
             table.add(a, 2, row);
+            table.add(balance, 3, row);
 
-            total += t.getAmount();
             row++;
         }
 
         content.getChildren().add(table);
 
+        // Final balance
+        double finalBalance = runningBalance;
+
         HBox totalBox = new HBox(15);
         totalBox.setAlignment(Pos.CENTER_RIGHT);
         totalBox.setPadding(new Insets(20, 0, 0, 0));
 
-        Label lblTot = new Label("TOTAL:");
+        Label lblTot = new Label("SOLDE RESTANT:");
+        lblTot.setMinWidth(Region.USE_PREF_SIZE);
         lblTot.setStyle("-fx-font-size: 14px; -fx-text-fill: #78909c;");
-        Label valTot = new Label(String.format("%.2f %s", total, currency));
+        Label valTot = new Label(String.format("%.2f %s", finalBalance, currency));
+        valTot.setMinWidth(Region.USE_PREF_SIZE); // Prevent dots
         valTot.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #263238;");
 
         totalBox.getChildren().addAll(lblTot, valTot);
         content.getChildren().add(totalBox);
+
+        // Amount in French words
+        String amountInWords = NumberToFrenchWords.convert(Math.abs(finalBalance), currency);
+        String prefix = finalBalance < 0 ? "Le client a un crédit de: " : "Le client doit: ";
+        Label wordsLabel = new Label(prefix + amountInWords);
+        wordsLabel.setMinWidth(Region.USE_PREF_SIZE); // Ensure text is visible
+        wordsLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #555555; -fx-font-style: italic; -fx-padding: 5 0;");
+        wordsLabel.setWrapText(true);
+        wordsLabel.setMaxWidth(600); // Limit width to encourage wrapping if needed
+        wordsLabel.setAlignment(Pos.CENTER_RIGHT);
+        content.getChildren().add(wordsLabel);
 
         setContent(content);
 
@@ -480,6 +553,18 @@ public class PreviewDialog extends Dialog<Void> {
         title.setAlignment(Pos.CENTER);
         title.setMaxWidth(Double.MAX_VALUE);
         return title;
+    }
+
+    private String getPaymentTypeName(int id) {
+        try {
+            List<PaymentType> types = new PaymentTypeDAO().getAllPaymentTypes();
+            for (PaymentType pt : types) {
+                if (pt.getId() == id)
+                    return pt.getName();
+            }
+        } catch (Exception e) {
+        }
+        return null;
     }
 
     private void showAlert(String title, String content) {

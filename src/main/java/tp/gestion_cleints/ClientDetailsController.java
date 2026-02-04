@@ -46,6 +46,7 @@ public class ClientDetailsController {
 
     private Client currentClient;
     private FinancialDAO financialDAO = new FinancialDAO();
+    private PaymentTypeDAO paymentTypeDAO = new PaymentTypeDAO();
     private ResourceBundle bundle;
     private MainController mainController;
 
@@ -112,7 +113,10 @@ public class ClientDetailsController {
         transactionTable.setItems(FXCollections.observableArrayList(transactions));
 
         // Update totals
-        double totalFees = currentClient.getFixedTotalAmount()
+        // Use TTC as the base contract amount if available, otherwise fallback to fixed
+        // (HT)
+        double baseAmount = currentClient.getTtc() > 0 ? currentClient.getTtc() : currentClient.getFixedTotalAmount();
+        double totalFees = baseAmount
                 + financialDAO.getTotalByClientAndType(currentClient.getId(), Transaction.TYPE_HONORAIRE_EXTRA);
         double charges = financialDAO.getTotalByClientAndType(currentClient.getId(), Transaction.TYPE_CHARGE);
         double payments = financialDAO.getTotalPaidByClient(currentClient.getId());
@@ -151,6 +155,13 @@ public class ClientDetailsController {
                 Transaction.TYPE_HONORAIRE_EXTRA);
         typeCombo.setValue(Transaction.TYPE_PAYMENT);
 
+        ComboBox<PaymentType> paymentTypeCombo = new ComboBox<>();
+        paymentTypeCombo.setItems(FXCollections.observableArrayList(paymentTypeDAO.getAllPaymentTypes()));
+        // Select first one by default if available
+        if (!paymentTypeCombo.getItems().isEmpty()) {
+            paymentTypeCombo.setValue(paymentTypeCombo.getItems().get(0));
+        }
+
         TextField amountField = new TextField();
         TextField receiptNoField = new TextField(financialDAO.getNextReceiptNumber());
         TextArea notesField = new TextArea();
@@ -158,12 +169,14 @@ public class ClientDetailsController {
 
         grid.add(new Label("Type:"), 0, 0);
         grid.add(typeCombo, 1, 0);
-        grid.add(new Label(bundle.getString("details.column.receipt_no") + ":"), 0, 1);
-        grid.add(receiptNoField, 1, 1);
-        grid.add(new Label("Amount:"), 0, 2);
-        grid.add(amountField, 1, 2);
-        grid.add(new Label("Notes:"), 0, 3);
-        grid.add(notesField, 1, 3);
+        grid.add(new Label(bundle.getString("payment.mode") + ":"), 0, 1);
+        grid.add(paymentTypeCombo, 1, 1);
+        grid.add(new Label(bundle.getString("details.column.receipt_no") + ":"), 0, 2);
+        grid.add(receiptNoField, 1, 2);
+        grid.add(new Label("Amount:"), 0, 3);
+        grid.add(amountField, 1, 3);
+        grid.add(new Label("Notes:"), 0, 4);
+        grid.add(notesField, 1, 4);
 
         dialog.getDialogPane().setContent(grid);
 
@@ -172,8 +185,9 @@ public class ClientDetailsController {
                 try {
                     double amount = Double.parseDouble(amountField.getText());
                     String date = new java.sql.Date(System.currentTimeMillis()).toString();
+                    int ptId = paymentTypeCombo.getValue() != null ? paymentTypeCombo.getValue().getId() : 1;
                     return new Transaction(currentClient.getId(), amount, date, notesField.getText(),
-                            typeCombo.getValue(), SessionContext.getInstance().getCurrentYear().getId(), 1,
+                            typeCombo.getValue(), SessionContext.getInstance().getCurrentYear().getId(), ptId,
                             receiptNoField.getText());
                 } catch (Exception e) {
                     return null;
@@ -220,6 +234,16 @@ public class ClientDetailsController {
                 Transaction.TYPE_HONORAIRE_EXTRA);
         typeCombo.setValue(selected.getType());
 
+        ComboBox<PaymentType> paymentTypeCombo = new ComboBox<>();
+        paymentTypeCombo.setItems(FXCollections.observableArrayList(paymentTypeDAO.getAllPaymentTypes()));
+        // Try to match current payment type
+        for (PaymentType pt : paymentTypeCombo.getItems()) {
+            if (pt.getId() == selected.getPaymentTypeId()) {
+                paymentTypeCombo.setValue(pt);
+                break;
+            }
+        }
+
         TextField amountField = new TextField(String.valueOf(selected.getAmount()));
         TextField receiptNoField = new TextField(selected.getReceiptNumber());
         TextArea notesField = new TextArea(selected.getNotes());
@@ -227,12 +251,14 @@ public class ClientDetailsController {
 
         grid.add(new Label("Type:"), 0, 0);
         grid.add(typeCombo, 1, 0);
-        grid.add(new Label(bundle.getString("details.column.receipt_no") + ":"), 0, 1);
-        grid.add(receiptNoField, 1, 1);
-        grid.add(new Label("Amount:"), 0, 2);
-        grid.add(amountField, 1, 2);
-        grid.add(new Label("Notes:"), 0, 3);
-        grid.add(notesField, 1, 3);
+        grid.add(new Label(bundle.getString("payment.mode") + ":"), 0, 1);
+        grid.add(paymentTypeCombo, 1, 1);
+        grid.add(new Label(bundle.getString("details.column.receipt_no") + ":"), 0, 2);
+        grid.add(receiptNoField, 1, 2);
+        grid.add(new Label("Amount:"), 0, 3);
+        grid.add(amountField, 1, 3);
+        grid.add(new Label("Notes:"), 0, 4);
+        grid.add(notesField, 1, 4);
 
         dialog.getDialogPane().setContent(grid);
 
@@ -243,6 +269,9 @@ public class ClientDetailsController {
                     selected.setNotes(notesField.getText());
                     selected.setType(typeCombo.getValue());
                     selected.setReceiptNumber(receiptNoField.getText());
+                    if (paymentTypeCombo.getValue() != null) {
+                        selected.setPaymentTypeId(paymentTypeCombo.getValue().getId());
+                    }
                     return selected;
                 } catch (Exception e) {
                     return null;

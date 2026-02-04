@@ -94,6 +94,44 @@ public class LoginController {
     }
 
     @FXML
+    private void handleChangePassword() {
+        String password = passwordField.getText();
+
+        if (password.isEmpty()) {
+            errorLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold;");
+            errorLabel.setText(bundle.getString("login.password_prompt"));
+            return;
+        }
+
+        if (userDAO.authenticate("admin", password)) {
+            showChangePasswordDialog(password);
+        } else {
+            errorLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold;");
+            errorLabel.setText(bundle.getString("login.error"));
+        }
+    }
+
+    private void showChangePasswordDialog(String currentPassword) {
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle(bundle.getString("login.btn_change"));
+        dialog.initOwner(passwordField.getScene().getWindow());
+
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("change-password.fxml"), bundle);
+            Parent root = loader.load();
+            ChangePasswordController controller = loader.getController();
+            controller.currentPasswordField.setText(currentPassword);
+            controller.currentPasswordField.setEditable(false); // Locked to verified password
+
+            dialog.getDialogPane().setContent(root);
+            dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+            dialog.showAndWait();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
     private void handleLogin() {
         String password = passwordField.getText();
         Year selectedYear = yearComboBox.getValue();

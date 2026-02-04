@@ -16,6 +16,8 @@ public class ChangePasswordController {
     public Label statusLabel;
 
     private UserDAO userDAO = new UserDAO();
+    private java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("tp.gestion_cleints.messages",
+            java.util.Locale.getDefault());
 
     @FXML
     public void handleUpdatePassword() {
@@ -24,22 +26,22 @@ public class ChangePasswordController {
         String confirm = confirmPasswordField.getText();
 
         if (current.isEmpty() || newPass.isEmpty() || confirm.isEmpty()) {
-            setStatus("All fields are required.", true);
+            setStatus(bundle.getString("login.all_fields"), true);
             return;
         }
 
         if (!newPass.equals(confirm)) {
-            setStatus("New passwords do not match.", true);
+            setStatus(bundle.getString("login.update_match_error"), true);
             return;
         }
 
-        // Validate current password
-        if (userDAO.authenticate("administrator", current)) {
-            userDAO.updatePassword("administrator", newPass);
-            setStatus("Password updated successfully!", false);
+        // Validate current password - user 'admin'
+        if (userDAO.authenticate("admin", current)) {
+            userDAO.updatePassword("admin", newPass);
+            setStatus(bundle.getString("login.update_success"), false);
             clearFields();
         } else {
-            setStatus("Incorrect current password.", true);
+            setStatus(bundle.getString("login.error"), true);
         }
     }
 

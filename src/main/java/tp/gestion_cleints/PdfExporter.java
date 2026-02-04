@@ -3,6 +3,8 @@ package tp.gestion_cleints;
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.*;
 import java.io.FileOutputStream;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -103,7 +105,7 @@ public class PdfExporter {
     public static void exportTransactionReceipt(Transaction t, Client c, AdminInfo adminInfo, String filePath,
             ResourceBundle bundle)
             throws Exception {
-        Document document = new Document(PageSize.A5);
+        Document document = new Document(PageSize.A4); // Changed from A5 to A4 for more space
         PdfWriter.getInstance(document, new FileOutputStream(filePath));
         document.open();
 
@@ -111,6 +113,7 @@ public class PdfExporter {
         Font subTitleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11);
         Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 10);
         Font smallFont = FontFactory.getFont(FontFactory.HELVETICA, 9, java.awt.Color.GRAY);
+        Font italicFont = FontFactory.getFont(FontFactory.HELVETICA_OBLIQUE, 9, new java.awt.Color(70, 70, 70));
         String currency = bundle.getString("currency");
 
         // Brand/Company Header
@@ -163,9 +166,20 @@ public class PdfExporter {
 
         PdfPCell leftCell = new PdfPCell();
         leftCell.setBorder(Rectangle.NO_BORDER);
-        leftCell.addElement(new Phrase("Client: " + c.getRaisonSociale(), subTitleFont));
-        leftCell.addElement(new Phrase("Nom: " + c.getNomPrenom(), normalFont));
-        leftCell.addElement(new Phrase("Adresse: " + c.getAdresse() + ", " + c.getVille(), normalFont));
+        leftCell.setPaddingRight(10); // Add padding for better spacing
+
+        // Enable wrapping for all phrases with null checks
+        Phrase clientPhrase = new Phrase("Client: " + (c.getRaisonSociale() != null ? c.getRaisonSociale() : ""),
+                subTitleFont);
+        leftCell.addElement(clientPhrase);
+
+        Phrase nomPhrase = new Phrase("Nom: " + (c.getNomPrenom() != null ? c.getNomPrenom() : ""), normalFont);
+        leftCell.addElement(nomPhrase);
+
+        String adresseText = "Adresse: " + (c.getAdresse() != null ? c.getAdresse() : "") + ", "
+                + (c.getVille() != null ? c.getVille() : "");
+        Phrase adressePhrase = new Phrase(adresseText, normalFont);
+        leftCell.addElement(adressePhrase);
 
         // Admin Legal Info (ICE, RC, etc)
         if (adminInfo != null) {
@@ -187,7 +201,8 @@ public class PdfExporter {
         PdfPCell rightCell = new PdfPCell();
         rightCell.setBorder(Rectangle.NO_BORDER);
         rightCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-        rightCell.addElement(new Phrase("Date: " + t.getDate(), normalFont));
+        rightCell.setPaddingLeft(10); // Add padding for better spacing
+        rightCell.addElement(new Phrase("Date: " + (t.getDate() != null ? t.getDate() : ""), normalFont));
         rightCell.addElement(new Phrase("Client ICE: " + (c.getIce() != null ? c.getIce() : "-"), normalFont));
         rightCell.addElement(new Phrase("Régime: " + (c.getRegimeTva() != null ? c.getRegimeTva() : "-"), normalFont));
         infoTable.addCell(rightCell);
@@ -203,21 +218,40 @@ public class PdfExporter {
         addTableHeader(table, "Description du Paiement");
         addTableHeader(table, "Montant");
 
-        PdfPCell desCell = new PdfPCell(new Phrase("Versement: " + t.getNotes(), normalFont));
+        // Enable wrapping for description cell
+        PdfPCell desCell = new PdfPCell(
+                new Phrase("Versement: " + (t.getNotes() != null ? t.getNotes() : ""), normalFont));
         desCell.setPadding(10);
+        desCell.setNoWrap(false); // Enable text wrapping
         table.addCell(desCell);
 
         PdfPCell amtCell = new PdfPCell(new Phrase(String.format("%.2f %s", t.getAmount(), currency), subTitleFont));
         amtCell.setPadding(10);
         amtCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        amtCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         table.addCell(amtCell);
 
         document.add(table);
 
+        // Payment Mode
+        String ptName = getPaymentTypeName(t.getPaymentTypeId());
+        if (ptName != null) {
+            Paragraph ptPara = new Paragraph("Mode de paiement: " + ptName, normalFont);
+            ptPara.setSpacingBefore(5);
+            document.add(ptPara);
+        }
+
+        // Amount in words
+        String amountInWords = NumberToFrenchWords.convert(t.getAmount(), currency);
+        Paragraph amountWords = new Paragraph("\nMontant en lettres: " + amountInWords, italicFont);
+        amountWords.setAlignment(Element.ALIGN_LEFT);
+        amountWords.setSpacingBefore(10);
+        document.add(amountWords);
+
         // Footer
         Paragraph footer = new Paragraph("\nMerci pour votre confiance.", smallFont);
         footer.setAlignment(Element.ALIGN_CENTER);
-        footer.setSpacingBefore(30);
+        footer.setSpacingBefore(20);
         document.add(footer);
 
         document.close();
@@ -234,6 +268,8 @@ public class PdfExporter {
         Font subTitleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12);
         Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 10);
         Font smallFont = FontFactory.getFont(FontFactory.HELVETICA, 8, java.awt.Color.GRAY);
+        Font balanceFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, new java.awt.Color(0, 100, 0));
+        Font italicFont = FontFactory.getFont(FontFactory.HELVETICA_OBLIQUE, 9, new java.awt.Color(70, 70, 70));
         String currency = bundle.getString("currency");
 
         // Admin Header
@@ -295,31 +331,79 @@ public class PdfExporter {
         document.add(headerTable);
         document.add(new Chunk("\n"));
 
-        PdfPTable table = new PdfPTable(3);
+        // Table with running balance column
+        PdfPTable table = new PdfPTable(4);
         table.setWidthPercentage(100);
+        float[] columnWidths = { 15f, 40f, 20f, 25f };
+        table.setWidths(columnWidths);
+
         addTableHeader(table, "Date");
         addTableHeader(table, "Désignation / Notes");
         addTableHeader(table, "Montant");
+        addTableHeader(table, "Solde Restant");
 
-        double total = 0;
-        for (Transaction t : transactions) {
+        // Calculate running balance
+        double baseAmount = c.getTtc() > 0 ? c.getTtc() : c.getFixedTotalAmount();
+        double runningBalance = baseAmount; // Start with initial total
+
+        // Reverse transactions to show oldest first for running balance
+        List<Transaction> chronologicalTransactions = new ArrayList<>(transactions);
+        Collections.reverse(chronologicalTransactions);
+
+        for (Transaction t : chronologicalTransactions) {
+            // Date
             table.addCell(new Phrase(t.getDate(), normalFont));
+
+            // Designation
             String designation = t.getNotes();
             if (t.getReceiptNumber() != null && !t.getReceiptNumber().isEmpty()) {
                 designation = "(N° " + t.getReceiptNumber() + ") " + designation;
             }
+            String ptName = getPaymentTypeName(t.getPaymentTypeId());
+            if (ptName != null && Transaction.TYPE_PAYMENT.equals(t.getType())) {
+                designation += " [" + ptName + "]";
+            }
             table.addCell(new Phrase(designation, normalFont));
-            PdfPCell mCell = new PdfPCell(new Phrase(String.format("%.2f %s", t.getAmount(), currency), normalFont));
-            mCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-            table.addCell(mCell);
-            total += t.getAmount();
+
+            // Amount
+            PdfPCell amountCell = new PdfPCell(
+                    new Phrase(String.format("%.2f %s", t.getAmount(), currency), normalFont));
+            amountCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+            table.addCell(amountCell);
+
+            // Update running balance based on transaction type
+            // PAYMENT reduces the balance (client pays)
+            // CHARGE/HONORAIRE/PRODUIT increases the balance (client owes more)
+            if (Transaction.TYPE_PAYMENT.equals(t.getType())) {
+                runningBalance -= t.getAmount();
+            } else {
+                runningBalance += t.getAmount();
+            }
+
+            // Running Balance
+            PdfPCell balanceCell = new PdfPCell(
+                    new Phrase(String.format("%.2f %s", runningBalance, currency), balanceFont));
+            balanceCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+            balanceCell.setBackgroundColor(new java.awt.Color(240, 255, 240));
+            table.addCell(balanceCell);
         }
+
         document.add(table);
 
-        Paragraph summary = new Paragraph("\nTOTAL PAYÉ À CE JOUR: " + String.format("%.2f %s", total, currency),
+        // Final balance
+        double finalBalance = runningBalance;
+        Paragraph summary = new Paragraph("\nSOLDE RESTANT: " + String.format("%.2f %s", finalBalance, currency),
                 subTitleFont);
         summary.setAlignment(Element.ALIGN_RIGHT);
         document.add(summary);
+
+        // Amount in words
+        String amountInWords = NumberToFrenchWords.convert(Math.abs(finalBalance), currency);
+        String prefix = finalBalance < 0 ? "Le client a un crédit de: " : "Le client doit: ";
+        Paragraph amountWords = new Paragraph(prefix + amountInWords, italicFont);
+        amountWords.setAlignment(Element.ALIGN_RIGHT);
+        amountWords.setSpacingBefore(5);
+        document.add(amountWords);
 
         document.close();
     }
@@ -332,5 +416,17 @@ public class PdfExporter {
         header.setPhrase(
                 new Phrase(columnTitle, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, java.awt.Color.WHITE)));
         table.addCell(header);
+    }
+
+    private static String getPaymentTypeName(int id) {
+        try {
+            List<PaymentType> types = new PaymentTypeDAO().getAllPaymentTypes();
+            for (PaymentType pt : types) {
+                if (pt.getId() == id)
+                    return pt.getName();
+            }
+        } catch (Exception e) {
+        }
+        return null;
     }
 }

@@ -60,6 +60,32 @@ public class ClientFormController {
                 iceField.setText(oldValue);
             }
         });
+
+        // Auto-calculate TTC
+        javafx.beans.value.ChangeListener<String> calculationListener = (obs, oldVal, newVal) -> calculateTTC();
+        fixedTotalAmountField.textProperty().addListener(calculationListener);
+        tvaField.textProperty().addListener(calculationListener);
+    }
+
+    private void calculateTTC() {
+        try {
+            double ht = 0.0;
+            if (!fixedTotalAmountField.getText().isEmpty()) {
+                ht = Double.parseDouble(fixedTotalAmountField.getText());
+            }
+
+            double tvaPercent = 0.0;
+            String tvaText = tvaField.getText();
+            if (tvaText != null && !tvaText.isEmpty()) {
+                tvaText = tvaText.replace("%", "").trim();
+                tvaPercent = Double.parseDouble(tvaText);
+            }
+
+            double ttc = ht * (1 + tvaPercent / 100.0);
+            ttcField.setText(String.format(java.util.Locale.US, "%.2f", ttc));
+        } catch (NumberFormatException e) {
+            // Ignore parse errors while typing
+        }
     }
 
     public void setClient(Client client) {

@@ -38,11 +38,12 @@
 
             <VBox spacing="5">
                 <Label text="%nav.years" styleClass="summary-label-title"/>
-                <ComboBox fx:id="yearComboBox" maxWidth="Infinity" styleClass="text-field" promptText="%nav.select_year"/>
+                <ComboBox fx:id="yearComboBox" maxWidth="120" prefHeight="25" styleClass="text-field" promptText="%nav.select_year" style="-fx-font-size: 13px; -fx-background-radius: 3; -fx-border-radius: 3; -fx-padding: 0 5; -fx-font-weight: bold;"/>
             </VBox>
         </VBox>
         
         <Button text="%login.btn_login" onAction="#handleLogin" styleClass="button-primary" maxWidth="Infinity"/>
+        <Button text="%login.btn_change" onAction="#handleChangePassword" styleClass="button-secondary" maxWidth="Infinity"/>
         <Button text="%login.btn_reset" onAction="#handleResetPassword" styleClass="button-secondary" maxWidth="Infinity"/>
         
         <Label fx:id="errorLabel" text="" style="-fx-text-fill: #e74c3c; -fx-font-weight: bold;"/>

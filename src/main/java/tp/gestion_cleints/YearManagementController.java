@@ -111,10 +111,37 @@ public class YearManagementController {
     private void handleDeleteYear() {
         Year selected = yearTable.getSelectionModel().getSelectedItem();
         if (selected != null) {
-            yearDAO.softDeleteYear(selected.getId());
-            loadYears();
-            if (mainController != null) {
-                mainController.refreshYearMenu();
+            // Generate 3-digit code
+            int code = (int) (Math.random() * 900) + 100;
+
+            TextInputDialog dialog = new TextInputDialog();
+            dialog.initOwner(yearTable.getScene().getWindow());
+            dialog.setTitle(resources.getString("details.confirm_delete"));
+            dialog.setHeaderText("Confirmation de sécuritée");
+            dialog.setContentText("Pour supprimer l'année [" + selected.getName()
+                    + "], veuillez saisir le code suivant : " + code);
+
+            // Set icon
+            try {
+                javafx.stage.Stage stage = (javafx.stage.Stage) dialog.getDialogPane().getScene().getWindow();
+                stage.getIcons().add(new javafx.scene.image.Image(
+                        getClass().getResourceAsStream("images/logo.png")));
+            } catch (Exception e) {
+            }
+
+            Optional<String> result = dialog.showAndWait();
+            if (result.isPresent() && result.get().equals(String.valueOf(code))) {
+                yearDAO.softDeleteYear(selected.getId());
+                loadYears();
+                if (mainController != null) {
+                    mainController.refreshYearMenu();
+                }
+            } else if (result.isPresent()) {
+                Alert error = new Alert(Alert.AlertType.ERROR);
+                error.setTitle("Erreur");
+                error.setHeaderText("Code incorrect");
+                error.setContentText("Le code saisi ne correspond pas. La suppression a été annulée.");
+                error.showAndWait();
             }
         }
     }
