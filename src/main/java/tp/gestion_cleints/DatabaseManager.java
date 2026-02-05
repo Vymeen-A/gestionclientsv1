@@ -22,6 +22,10 @@ public class DatabaseManager {
         System.out.println("Database path: " + DB_PATH);
     }
 
+    public static String getDatabasePath() {
+        return DB_PATH;
+    }
+
     public static Connection getConnection() throws SQLException {
         try {
             Class.forName("org.sqlite.JDBC");
@@ -126,7 +130,12 @@ public class DatabaseManager {
             // Create users table for administrator
             String createUsersTable = "CREATE TABLE IF NOT EXISTS users ("
                     + "username TEXT PRIMARY KEY, "
-                    + "password_hash TEXT"
+                    + "password_hash TEXT, "
+                    + "role TEXT DEFAULT 'READ_ONLY', "
+                    + "full_name TEXT, "
+                    + "email TEXT, "
+                    + "phone TEXT, "
+                    + "profile_photo TEXT"
                     + ");";
             stmt.execute(createUsersTable);
 
@@ -167,13 +176,74 @@ public class DatabaseManager {
             // Ensure one row exists
             stmt.execute("INSERT OR IGNORE INTO admin_info (id) VALUES (1)");
 
+            // Create invoices table
+            String createInvoicesTable = "CREATE TABLE IF NOT EXISTS invoices ("
+                    + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    + "client_id INTEGER, "
+                    + "number TEXT UNIQUE, "
+                    + "date TEXT, "
+                    + "due_date TEXT, "
+                    + "total_ht REAL, "
+                    + "total_tva REAL, "
+                    + "total_ttc REAL, "
+                    + "status TEXT, "
+                    + "year_id INTEGER, "
+                    + "FOREIGN KEY(client_id) REFERENCES clients(id), "
+                    + "FOREIGN KEY(year_id) REFERENCES years(id)"
+                    + ");";
+            stmt.execute(createInvoicesTable);
+
+            // Create audit_logs table
+            String createAuditLogsTable = "CREATE TABLE IF NOT EXISTS audit_logs ("
+                    + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    + "username TEXT, "
+                    + "action TEXT, "
+                    + "entity_type TEXT, "
+                    + "entity_id TEXT, "
+                    + "details TEXT, "
+                    + "timestamp DATETIME DEFAULT CURRENT_TIMESTAMP"
+                    + ");";
+            stmt.execute(createAuditLogsTable);
+
+            // Create tasks table
+            String createTasksTable = "CREATE TABLE IF NOT EXISTS tasks ("
+                    + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    + "client_id INTEGER, "
+                    + "title TEXT, "
+                    + "description TEXT, "
+                    + "due_date TEXT, "
+                    + "status TEXT DEFAULT 'PENDING', "
+                    + "recurring_type TEXT, "
+                    + "FOREIGN KEY(client_id) REFERENCES clients(id)"
+                    + ");";
+            stmt.execute(createTasksTable);
+
             // Check admin existence (simplified)
             String checkAdmin = "SELECT COUNT(*) FROM users WHERE username = 'admin'";
             ResultSet rs = stmt.executeQuery(checkAdmin);
             if (rs.next() && rs.getInt(1) == 0) {
-                // Placeholder for admin creation if needed
+                // Initial admin creation script can be added in UserDAO
             }
             rs.close();
+
+            // Migration: Add role column if missing
+            try {
+                stmt.execute("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'READ_ONLY'");
+            } catch (SQLException e) {
+            }
+            // Migrate old role names if any
+            stmt.execute("UPDATE users SET role = 'READ_ONLY' WHERE role = 'ASSISTANT'");
+            // Ensure admin has ADMIN role
+            stmt.execute("UPDATE users SET role = 'ADMIN' WHERE username = 'admin'");
+
+            // Migration: Add profile columns if missing
+            String[] userCols = { "full_name TEXT", "email TEXT", "phone TEXT", "profile_photo TEXT" };
+            for (String col : userCols) {
+                try {
+                    stmt.execute("ALTER TABLE users ADD COLUMN " + col);
+                } catch (SQLException e) {
+                }
+            }
 
             // Migrating existing data
             String[] newCols = {

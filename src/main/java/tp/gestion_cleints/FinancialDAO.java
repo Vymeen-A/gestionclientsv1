@@ -20,19 +20,23 @@ public class FinancialDAO {
         }
     }
 
+    public FinancialDAO(Connection conn) {
+        this.conn = conn;
+    }
+
     // Transactions
     public void addTransaction(Transaction t) {
         String sql = "INSERT INTO transactions(client_id, amount, date, notes, type, year_id, payment_type_id, receipt_number) VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            Year currentYear = SessionContext.getInstance().getCurrentYear();
+            int yearId = currentYear != null ? currentYear.getId() : 1;
+
             pstmt.setInt(1, t.getClientId());
             pstmt.setDouble(2, t.getAmount());
             pstmt.setString(3, t.getDate());
             pstmt.setString(4, t.getNotes());
             pstmt.setString(5, t.getType() != null ? t.getType() : Transaction.TYPE_PAYMENT);
-            pstmt.setInt(6,
-                    SessionContext.getInstance().getCurrentYear() != null
-                            ? SessionContext.getInstance().getCurrentYear().getId()
-                            : 1);
+            pstmt.setInt(6, yearId);
             pstmt.setInt(7, t.getPaymentTypeId() > 0 ? t.getPaymentTypeId() : 1);
             pstmt.setString(8, t.getReceiptNumber());
             pstmt.executeUpdate();
@@ -135,12 +139,10 @@ public class FinancialDAO {
     }
 
     public String getNextReceiptNumber() {
-        int yearId = SessionContext.getInstance().getCurrentYear() != null
-                ? SessionContext.getInstance().getCurrentYear().getId()
-                : 1;
-        String yearName = SessionContext.getInstance().getCurrentYear() != null
-                ? SessionContext.getInstance().getCurrentYear().getName()
-                : "2025";
+        Year currentYear = SessionContext.getInstance().getCurrentYear();
+        int yearId = currentYear != null ? currentYear.getId() : 1;
+        String yearName = currentYear != null ? currentYear.getName()
+                : String.valueOf(java.time.LocalDate.now().getYear());
 
         String sql = "SELECT receipt_number FROM transactions WHERE year_id = ? AND receipt_number LIKE ? ORDER BY id DESC LIMIT 1";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -163,5 +165,20 @@ public class FinancialDAO {
             e.printStackTrace();
         }
         return yearName + "/0001";
+    }
+
+    public String getLastPaymentDateByClient(int clientId) {
+        String sql = "SELECT MAX(date) FROM transactions WHERE client_id = ? AND type = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, clientId);
+            pstmt.setString(2, Transaction.TYPE_PAYMENT);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next())
+                    return rs.getString(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

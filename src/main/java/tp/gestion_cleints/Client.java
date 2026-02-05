@@ -23,6 +23,7 @@ public class Client {
     private double ttc;
     private int yearId;
     private boolean isHidden;
+    private String status; // GOOD, LATE, RISKY, INACTIVE
 
     public Client(int id, String raisonSociale, String nomPrenom, String adresse, String ville,
             String ice, String rc, String tp, String taxeHabit, String tva,
@@ -228,5 +229,13 @@ public class Client {
 
     public void setHidden(boolean hidden) {
         isHidden = hidden;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

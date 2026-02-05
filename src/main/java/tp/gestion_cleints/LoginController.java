@@ -21,6 +21,8 @@ public class LoginController {
     private Label errorLabel;
     @FXML
     private ComboBox<Year> yearComboBox;
+    @FXML
+    private ComboBox<User> userComboBox;
 
     private UserDAO userDAO = new UserDAO();
     private YearDAO yearDAO = new YearDAO();
@@ -35,6 +37,9 @@ public class LoginController {
 
         // Load Years
         loadYears();
+
+        // Load Users
+        loadUsers();
     }
 
     private void loadYears() {
@@ -131,10 +136,32 @@ public class LoginController {
         }
     }
 
+    private void loadUsers() {
+        userComboBox.setItems(javafx.collections.FXCollections.observableArrayList(userDAO.getAllUsers()));
+        userComboBox.setCellFactory(lv -> new ListCell<User>() {
+            @Override
+            protected void updateItem(User item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty ? null : item.getUsername());
+            }
+        });
+        userComboBox.setButtonCell(new ListCell<User>() {
+            @Override
+            protected void updateItem(User item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty ? null : item.getUsername());
+            }
+        });
+        if (!userComboBox.getItems().isEmpty()) {
+            userComboBox.getSelectionModel().select(0);
+        }
+    }
+
     @FXML
     private void handleLogin() {
         String password = passwordField.getText();
         Year selectedYear = yearComboBox.getValue();
+        User selectedUser = userComboBox.getValue();
 
         if (selectedYear == null) {
             errorLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold;");
@@ -142,7 +169,13 @@ public class LoginController {
             return;
         }
 
-        if (userDAO.authenticate("admin", password)) {
+        if (selectedUser == null) {
+            errorLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold;");
+            errorLabel.setText("Please select a user");
+            return;
+        }
+
+        if (userDAO.authenticate(selectedUser.getUsername(), password)) {
             SessionContext.getInstance().setCurrentYear(selectedYear);
             loadMainApp();
         } else {

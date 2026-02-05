@@ -28,6 +28,7 @@
 
         <TableView fx:id="clientTable" prefHeight="500">
             <columns>
+                <TableColumn fx:id="statusColumn" text="●" prefWidth="40"/>
                 <TableColumn fx:id="idColumn" text="%column.id" prefWidth="50"/>
                 <TableColumn fx:id="raisonSocialeColumn" text="%column.raison_sociale" prefWidth="250"/>
                 <TableColumn fx:id="nomPrenomColumn" text="%column.nom_prenom" prefWidth="200"/>

@@ -8,6 +8,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.Region;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import java.io.IOException;
@@ -20,6 +21,8 @@ public class ClientListController {
     private TextField searchField;
     @FXML
     private TableView<Client> clientTable;
+    @FXML
+    private TableColumn<Client, String> statusColumn;
     @FXML
     private TableColumn<Client, Integer> idColumn;
     @FXML
@@ -69,6 +72,8 @@ public class ClientListController {
     }
 
     private void setupColumns() {
+        statusColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
+        statusColumn.setCellFactory(tc -> new StatusCell());
         idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
         raisonSocialeColumn.setCellValueFactory(new PropertyValueFactory<>("raisonSociale"));
         nomPrenomColumn.setCellValueFactory(new PropertyValueFactory<>("nomPrenom"));
@@ -103,6 +108,51 @@ public class ClientListController {
                 }
             }
         });
+    }
+
+    private class StatusCell extends TableCell<Client, String> {
+        private final Region circle = new Region();
+
+        public StatusCell() {
+            circle.getStyleClass().add("status-circle");
+        }
+
+        @Override
+        protected void updateItem(String item, boolean empty) {
+            super.updateItem(item, empty);
+            if (empty || item == null) {
+                setGraphic(null);
+                setTooltip(null);
+            } else {
+                circle.getStyleClass().removeAll("status-good", "status-late", "status-risky", "status-danger",
+                        "status-inactive");
+                String tooltipText = "";
+                switch (item) {
+                    case "GOOD":
+                        circle.getStyleClass().add("status-good");
+                        tooltipText = "Situation Régulière";
+                        break;
+                    case "LATE":
+                        circle.getStyleClass().add("status-late");
+                        tooltipText = "Paiement en retard (>30j)";
+                        break;
+                    case "RISKY":
+                        circle.getStyleClass().add("status-risky");
+                        tooltipText = "Client à Risque (>90j)";
+                        break;
+                    case "INACTIVE":
+                        circle.getStyleClass().add("status-inactive");
+                        tooltipText = "Inactif";
+                        break;
+                    default:
+                        circle.getStyleClass().add("status-inactive");
+                        tooltipText = "Inconnu";
+                        break;
+                }
+                setGraphic(circle);
+                setTooltip(new Tooltip(tooltipText));
+            }
+        }
     }
 
     private class CurrencyCell extends TableCell<Client, Double> {

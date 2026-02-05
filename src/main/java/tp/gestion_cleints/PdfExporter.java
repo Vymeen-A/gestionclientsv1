@@ -13,9 +13,9 @@ public class PdfExporter {
     public static void exportClients(List<Client> clients, AdminInfo adminInfo, String filePath, ResourceBundle bundle)
             throws Exception {
         Document document = new Document(PageSize.A4);
-        PdfWriter.getInstance(document, new FileOutputStream(filePath));
-
-        document.open();
+        try (FileOutputStream fos = new FileOutputStream(filePath)) {
+            PdfWriter.getInstance(document, fos);
+            document.open();
 
         // 1. Admin Header (Top Right or Left)
         Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18);
@@ -105,9 +105,11 @@ public class PdfExporter {
     public static void exportTransactionReceipt(Transaction t, Client c, AdminInfo adminInfo, String filePath,
             ResourceBundle bundle)
             throws Exception {
+        List<PaymentType> paymentTypes = new PaymentTypeDAO().getAllPaymentTypes();
         Document document = new Document(PageSize.A4); // Changed from A5 to A4 for more space
-        PdfWriter.getInstance(document, new FileOutputStream(filePath));
-        document.open();
+        try (FileOutputStream fos = new FileOutputStream(filePath)) {
+            PdfWriter.getInstance(document, fos);
+            document.open();
 
         Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16, java.awt.Color.DARK_GRAY);
         Font subTitleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11);
@@ -234,7 +236,7 @@ public class PdfExporter {
         document.add(table);
 
         // Payment Mode
-        String ptName = getPaymentTypeName(t.getPaymentTypeId());
+        String ptName = getPaymentTypeName(t.getPaymentTypeId(), paymentTypes);
         if (ptName != null) {
             Paragraph ptPara = new Paragraph("Mode de paiement: " + ptName, normalFont);
             ptPara.setSpacingBefore(5);
@@ -260,9 +262,11 @@ public class PdfExporter {
     public static void exportTransactionStatement(Client c, List<Transaction> transactions, AdminInfo adminInfo,
             String filePath,
             ResourceBundle bundle) throws Exception {
+        List<PaymentType> paymentTypes = new PaymentTypeDAO().getAllPaymentTypes();
         Document document = new Document(PageSize.A4);
-        PdfWriter.getInstance(document, new FileOutputStream(filePath));
-        document.open();
+        try (FileOutputStream fos = new FileOutputStream(filePath)) {
+            PdfWriter.getInstance(document, fos);
+            document.open();
 
         Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 20, new java.awt.Color(44, 62, 80));
         Font subTitleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12);
@@ -359,7 +363,7 @@ public class PdfExporter {
             if (t.getReceiptNumber() != null && !t.getReceiptNumber().isEmpty()) {
                 designation = "(N° " + t.getReceiptNumber() + ") " + designation;
             }
-            String ptName = getPaymentTypeName(t.getPaymentTypeId());
+            String ptName = getPaymentTypeName(t.getPaymentTypeId(), paymentTypes);
             if (ptName != null && Transaction.TYPE_PAYMENT.equals(t.getType())) {
                 designation += " [" + ptName + "]";
             }
@@ -408,6 +412,52 @@ public class PdfExporter {
         document.close();
     }
 
+    public static void exportAuditLogs(List<AuditLog> logs, String filePath, ResourceBundle bundle)
+            throws Exception {
+        Document document = new Document(PageSize.A4.rotate()); // Landscape for more details
+        try (FileOutputStream fos = new FileOutputStream(filePath)) {
+            PdfWriter.getInstance(document, fos);
+            document.open();
+
+        Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18);
+        Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 9);
+        Font smallFont = FontFactory.getFont(FontFactory.HELVETICA, 8, java.awt.Color.GRAY);
+
+        Paragraph title = new Paragraph("COMMERCIAL AUDIT TRAIL LOGS", titleFont);
+        title.setAlignment(Element.ALIGN_CENTER);
+        title.setSpacingAfter(20);
+        document.add(title);
+
+        PdfPTable table = new PdfPTable(6);
+        table.setWidthPercentage(100);
+        table.setWidths(new float[] { 12f, 12f, 12f, 15f, 35f, 14f });
+
+        addTableHeader(table, "User");
+        addTableHeader(table, "Action");
+        addTableHeader(table, "Entity");
+        addTableHeader(table, "ID");
+        addTableHeader(table, "Details");
+        addTableHeader(table, "Timestamp");
+
+        for (AuditLog log : logs) {
+            table.addCell(new Phrase(log.getUsername(), normalFont));
+            table.addCell(new Phrase(log.getAction(), normalFont));
+            table.addCell(new Phrase(log.getEntityType(), normalFont));
+            table.addCell(new Phrase(log.getEntityId(), normalFont));
+            table.addCell(new Phrase(log.getDetails(), normalFont));
+            table.addCell(new Phrase(log.getTimestamp(), normalFont));
+        }
+
+        document.add(table);
+
+        Paragraph footer = new Paragraph("Compliance Report - Generated on " + new java.util.Date(), smallFont);
+        footer.setAlignment(Element.ALIGN_RIGHT);
+        footer.setSpacingBefore(10);
+        document.add(footer);
+
+        document.close();
+    }
+
     private static void addTableHeader(PdfPTable table, String columnTitle) {
         PdfPCell header = new PdfPCell();
         header.setBackgroundColor(new java.awt.Color(52, 152, 219)); // Premium blue
@@ -418,14 +468,12 @@ public class PdfExporter {
         table.addCell(header);
     }
 
-    private static String getPaymentTypeName(int id) {
-        try {
-            List<PaymentType> types = new PaymentTypeDAO().getAllPaymentTypes();
-            for (PaymentType pt : types) {
-                if (pt.getId() == id)
-                    return pt.getName();
-            }
-        } catch (Exception e) {
+    private static String getPaymentTypeName(int id, List<PaymentType> types) {
+        if (types == null)
+            return null;
+        for (PaymentType pt : types) {
+            if (pt.getId() == id)
+                return pt.getName();
         }
         return null;
     }

@@ -122,9 +122,15 @@ public class ClientFormController {
         }
 
         String ice = iceField.getText();
-        if (ice != null && !ice.trim().isEmpty() && ice.length() != 15) {
-            showAlert(bundle.getString("alert.validation_error"), "I.C.E must be exactly 15 characters.");
-            return;
+        if (ice != null && !ice.trim().isEmpty()) {
+            if (ice.length() != 15) {
+                showAlert(bundle.getString("alert.validation_error"), "I.C.E must be exactly 15 characters.");
+                return;
+            }
+            if (currentClient == null && clientDAO.existsByIce(ice)) {
+                showAlert(bundle.getString("alert.validation_error"), "Un client avec cet I.C.E existe déjà.");
+                return;
+            }
         }
 
         double amount = 0.0;

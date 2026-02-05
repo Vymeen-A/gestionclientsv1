@@ -25,6 +25,11 @@
         </VBox>
         
         <VBox spacing="15" alignment="CENTER_LEFT">
+            <VBox spacing="5" fx:id="userSelectionBox">
+                <Label text="%user.username" styleClass="summary-label-title"/>
+                <ComboBox fx:id="userComboBox" maxWidth="Infinity" styleClass="text-field" promptText="%user.select_user"/>
+            </VBox>
+
             <VBox spacing="5">
                 <Label text="%login.password" styleClass="summary-label-title"/>
                 <HBox spacing="0" alignment="CENTER_LEFT" styleClass="password-container">

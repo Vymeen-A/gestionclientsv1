@@ -21,7 +21,7 @@
 
 .main-nav {
     -fx-background-color: #2c3e50;
-    -fx-padding: 5 20;
+    -fx-padding: 5 10;
 }
 
 .title-label-small {
@@ -33,9 +33,9 @@
 .top-nav-button {
     -fx-background-color: transparent;
     -fx-text-fill: #bdc3c7;
-    -fx-font-size: 14px;
+    -fx-font-size: 13px;
     -fx-font-weight: bold;
-    -fx-padding: 10 12;
+    -fx-padding: 8 6;
     -fx-cursor: hand;
     -fx-border-width: 0 0 3 0;
     -fx-border-color: transparent;
@@ -54,9 +54,9 @@
 .menu-button {
     -fx-background-color: transparent;
     -fx-text-fill: #bdc3c7;
-    -fx-font-size: 14px;
+    -fx-font-size: 13px;
     -fx-font-weight: bold;
-    -fx-padding: 10 12;
+    -fx-padding: 8 6;
     -fx-cursor: hand;
 }
 
@@ -115,15 +115,15 @@
 .active-year-label {
     -fx-text-fill: #3498db;
     -fx-font-weight: bold;
-    -fx-font-size: 14px;
-    -fx-padding: 0 15;
+    -fx-font-size: 13px;
+    -fx-padding: 0 8;
 }
 
 .lang-button {
     -fx-background-color: transparent;
     -fx-text-fill: #bdc3c7;
     -fx-font-size: 12px;
-    -fx-padding: 5 10;
+    -fx-padding: 5 4;
     -fx-cursor: hand;
 }
 
@@ -445,4 +445,98 @@
 .window-control-button:hover {
     -fx-background-color: #ecf0f1;
     -fx-border-color: #bdc3c7;
+}
+
+/* Status Indicators */
+.status-circle {
+    -fx-shape: "M 100, 100 m -75, 0 a 75,75 0 1,0 150,0 a 75,75 0 1,0 -150,0";
+    -fx-min-width: 12px;
+    -fx-max-width: 12px;
+    -fx-min-height: 12px;
+    -fx-max-height: 12px;
+}
+
+.status-good {
+    -fx-background-color: #2ecc71;
+}
+
+.status-late {
+    -fx-background-color: #f1c40f;
+}
+
+.status-risky {
+    -fx-background-color: #e67e22;
+}
+
+.status-danger {
+    -fx-background-color: #e74c3c;
+}
+
+.status-inactive {
+    -fx-background-color: #95a5a6;
+}
+
+.profile-photo-container {
+    -fx-background-color: white;
+    -fx-padding: 5;
+    -fx-background-radius: 105;
+    -fx-border-radius: 105;
+    -fx-border-color: #3498db;
+    -fx-border-width: 3;
+}
+
+.user-menu-button {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-background-radius: 20;
+    -fx-padding: 2 8;
+    -fx-cursor: hand;
+}
+
+.user-menu-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.2);
+}
+
+.text-field-readonly {
+    -fx-background-color: #f1f3f5;
+    -fx-text-fill: #7f8c8d;
+    -fx-border-color: #dee2e6;
+    -fx-border-radius: 6;
+    -fx-padding: 10 15;
+    -fx-background-radius: 6;
+}
+
+.back-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #3498db;
+    -fx-font-size: 24px;
+    -fx-cursor: hand;
+    -fx-padding: 0 10;
+}
+
+.status-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+    -fx-padding: 2 8;
+    -fx-background-radius: 10;
+    -fx-text-fill: white;
+}
+
+.bg-good {
+    -fx-background-color: #27ae60;
+}
+
+.bg-late {
+    -fx-background-color: #f39c12;
+}
+
+.bg-risky {
+    -fx-background-color: #e67e22;
+}
+
+.bg-danger {
+    -fx-background-color: #e74c3c;
+}
+
+.bg-inactive {
+    -fx-background-color: #95a5a6;
 }

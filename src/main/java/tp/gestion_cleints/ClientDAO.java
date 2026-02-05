@@ -11,10 +11,12 @@ public class ClientDAO {
     }
 
     private Connection conn;
+    private FinancialDAO fDAO;
 
     public ClientDAO() {
         try {
             this.conn = getConnection();
+            this.fDAO = new FinancialDAO(this.conn);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -28,36 +30,54 @@ public class ClientDAO {
 
     public boolean addClient(Client client) {
         String sql = "INSERT INTO clients(raison_sociale, nom_prenom, adresse, ville, ice, rc, tp, taxe_habit, tva, regime_tva, fax, email, rib, username, password, secteur, debut_act, is_hidden) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            pstmt.setString(1, client.getRaisonSociale());
-            pstmt.setString(2, client.getNomPrenom());
-            pstmt.setString(3, client.getAdresse());
-            pstmt.setString(4, client.getVille());
-            pstmt.setString(5, client.getIce());
-            pstmt.setString(6, client.getRc());
-            pstmt.setString(7, client.getTp());
-            pstmt.setString(8, client.getTaxeHabit());
-            pstmt.setString(9, client.getTva());
-            pstmt.setString(10, client.getRegimeTva());
-            pstmt.setString(11, client.getFax());
-            pstmt.setString(12, client.getEmail());
-            pstmt.setString(13, client.getRib());
-            pstmt.setString(14, client.getUsername());
-            pstmt.setString(15, client.getPassword());
-            pstmt.setString(16, client.getSecteur());
-            pstmt.setString(17, client.getDebutAct());
-            pstmt.setBoolean(18, client.isHidden());
-            pstmt.executeUpdate();
+        boolean autoCommit = true;
+        try {
+            autoCommit = conn.getAutoCommit();
+            conn.setAutoCommit(false);
 
-            ResultSet rs = pstmt.getGeneratedKeys();
-            if (rs.next()) {
-                int newId = rs.getInt(1);
-                updateYearlyData(newId, getCurrentYearId(), client.getFixedTotalAmount(), client.getTtc());
+            try (PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                pstmt.setString(1, client.getRaisonSociale());
+                pstmt.setString(2, client.getNomPrenom());
+                pstmt.setString(3, client.getAdresse());
+                pstmt.setString(4, client.getVille());
+                pstmt.setString(5, client.getIce());
+                pstmt.setString(6, client.getRc());
+                pstmt.setString(7, client.getTp());
+                pstmt.setString(8, client.getTaxeHabit());
+                pstmt.setString(9, client.getTva());
+                pstmt.setString(10, client.getRegimeTva());
+                pstmt.setString(11, client.getFax());
+                pstmt.setString(12, client.getEmail());
+                pstmt.setString(13, client.getRib());
+                pstmt.setString(14, client.getUsername());
+                pstmt.setString(15, client.getPassword());
+                pstmt.setString(16, client.getSecteur());
+                pstmt.setString(17, client.getDebutAct());
+                pstmt.setBoolean(18, client.isHidden());
+                pstmt.executeUpdate();
+
+                ResultSet rs = pstmt.getGeneratedKeys();
+                if (rs.next()) {
+                    int newId = rs.getInt(1);
+                    updateYearlyData(newId, getCurrentYearId(), client.getFixedTotalAmount(), client.getTtc());
+                }
             }
+            conn.commit();
             return true;
         } catch (SQLException e) {
+            try {
+                conn.rollback();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
             System.err.println("Error adding client: " + e.getMessage());
             return false;
+        } finally {
+            try {
+                conn.setAutoCommit(autoCommit);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -75,18 +95,16 @@ public class ClientDAO {
     public List<Client> getAllVisibleClients() {
         int yearId = getCurrentYearId();
         String sql = "SELECT c.*, COALESCE(cy.fixed_total_amount, 0) as yearly_amount, COALESCE(cy.ttc, 0) as yearly_ttc "
-                +
-                "FROM clients c LEFT JOIN client_year_data cy ON c.id = cy.client_id AND cy.year_id = ? " +
-                "WHERE c.is_hidden = 0";
+                + "FROM clients c LEFT JOIN client_year_data cy ON c.id = cy.client_id AND cy.year_id = ? "
+                + "WHERE c.is_hidden = 0";
         return getClientsWithParams(sql, yearId);
     }
 
     public List<Client> getHiddenClients() {
         int yearId = getCurrentYearId();
         String sql = "SELECT c.*, COALESCE(cy.fixed_total_amount, 0) as yearly_amount, COALESCE(cy.ttc, 0) as yearly_ttc "
-                +
-                "FROM clients c LEFT JOIN client_year_data cy ON c.id = cy.client_id AND cy.year_id = ? " +
-                "WHERE c.is_hidden = 1";
+                + "FROM clients c LEFT JOIN client_year_data cy ON c.id = cy.client_id AND cy.year_id = ? "
+                + "WHERE c.is_hidden = 1";
         return getClientsWithParams(sql, yearId);
     }
 
@@ -103,33 +121,51 @@ public class ClientDAO {
 
     public boolean updateClient(Client client) {
         String sql = "UPDATE clients SET raison_sociale=?, nom_prenom=?, adresse=?, ville=?, ice=?, rc=?, tp=?, taxe_habit=?, tva=?, regime_tva=?, fax=?, email=?, rib=?, username=?, password=?, secteur=?, debut_act=?, is_hidden=? WHERE id=?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, client.getRaisonSociale());
-            pstmt.setString(2, client.getNomPrenom());
-            pstmt.setString(3, client.getAdresse());
-            pstmt.setString(4, client.getVille());
-            pstmt.setString(5, client.getIce());
-            pstmt.setString(6, client.getRc());
-            pstmt.setString(7, client.getTp());
-            pstmt.setString(8, client.getTaxeHabit());
-            pstmt.setString(9, client.getTva());
-            pstmt.setString(10, client.getRegimeTva());
-            pstmt.setString(11, client.getFax());
-            pstmt.setString(12, client.getEmail());
-            pstmt.setString(13, client.getRib());
-            pstmt.setString(14, client.getUsername());
-            pstmt.setString(15, client.getPassword());
-            pstmt.setString(16, client.getSecteur());
-            pstmt.setString(17, client.getDebutAct());
-            pstmt.setBoolean(18, client.isHidden());
-            pstmt.setInt(19, client.getId());
-            pstmt.executeUpdate();
+        boolean autoCommit = true;
+        try {
+            autoCommit = conn.getAutoCommit();
+            conn.setAutoCommit(false);
 
-            updateYearlyData(client.getId(), getCurrentYearId(), client.getFixedTotalAmount(), client.getTtc());
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, client.getRaisonSociale());
+                pstmt.setString(2, client.getNomPrenom());
+                pstmt.setString(3, client.getAdresse());
+                pstmt.setString(4, client.getVille());
+                pstmt.setString(5, client.getIce());
+                pstmt.setString(6, client.getRc());
+                pstmt.setString(7, client.getTp());
+                pstmt.setString(8, client.getTaxeHabit());
+                pstmt.setString(9, client.getTva());
+                pstmt.setString(10, client.getRegimeTva());
+                pstmt.setString(11, client.getFax());
+                pstmt.setString(12, client.getEmail());
+                pstmt.setString(13, client.getRib());
+                pstmt.setString(14, client.getUsername());
+                pstmt.setString(15, client.getPassword());
+                pstmt.setString(16, client.getSecteur());
+                pstmt.setString(17, client.getDebutAct());
+                pstmt.setBoolean(18, client.isHidden());
+                pstmt.setInt(19, client.getId());
+                pstmt.executeUpdate();
+
+                updateYearlyData(client.getId(), getCurrentYearId(), client.getFixedTotalAmount(), client.getTtc());
+            }
+            conn.commit();
             return true;
         } catch (SQLException e) {
+            try {
+                conn.rollback();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
             System.err.println("Error updating client: " + e.getMessage());
             return false;
+        } finally {
+            try {
+                conn.setAutoCommit(autoCommit);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -189,16 +225,18 @@ public class ClientDAO {
     public List<Client> getRecentClients(int limit) {
         int yearId = getCurrentYearId();
         String sql = "SELECT c.*, COALESCE(cy.fixed_total_amount, 0) as yearly_amount, COALESCE(cy.ttc, 0) as yearly_ttc "
-                +
-                "FROM clients c LEFT JOIN client_year_data cy ON c.id = cy.client_id AND cy.year_id = ? " +
-                "WHERE c.is_hidden = 0 ORDER BY c.id DESC LIMIT ?";
+                + "FROM clients c LEFT JOIN client_year_data cy ON c.id = cy.client_id AND cy.year_id = ? "
+                + "WHERE c.is_hidden = 0 ORDER BY c.id DESC LIMIT ?";
         List<Client> clients = new ArrayList<>();
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, yearId);
             pstmt.setInt(2, limit);
             try (ResultSet rs = pstmt.executeQuery()) {
-                while (rs.next())
-                    clients.add(mapResultSetToClient(rs));
+                while (rs.next()) {
+                    Client c = mapResultSetToClient(rs);
+                    calculateAndSetStatus(c);
+                    clients.add(c);
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -209,9 +247,8 @@ public class ClientDAO {
     public List<Client> searchClients(String query) {
         int yearId = getCurrentYearId();
         String sql = "SELECT c.*, COALESCE(cy.fixed_total_amount, 0) as yearly_amount, COALESCE(cy.ttc, 0) as yearly_ttc "
-                +
-                "FROM clients c LEFT JOIN client_year_data cy ON c.id = cy.client_id AND cy.year_id = ? " +
-                "WHERE (c.raison_sociale LIKE ? OR c.nom_prenom LIKE ?) AND c.is_hidden = 0";
+                + "FROM clients c LEFT JOIN client_year_data cy ON c.id = cy.client_id AND cy.year_id = ? "
+                + "WHERE (c.raison_sociale LIKE ? OR c.nom_prenom LIKE ?) AND c.is_hidden = 0";
         List<Client> clients = new ArrayList<>();
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             String pattern = "%" + query + "%";
@@ -219,8 +256,11 @@ public class ClientDAO {
             pstmt.setString(2, pattern);
             pstmt.setString(3, pattern);
             try (ResultSet rs = pstmt.executeQuery()) {
-                while (rs.next())
-                    clients.add(mapResultSetToClient(rs));
+                while (rs.next()) {
+                    Client c = mapResultSetToClient(rs);
+                    calculateAndSetStatus(c);
+                    clients.add(c);
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -233,8 +273,11 @@ public class ClientDAO {
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, yearId);
             try (ResultSet rs = pstmt.executeQuery()) {
-                while (rs.next())
-                    clients.add(mapResultSetToClient(rs));
+                while (rs.next()) {
+                    Client c = mapResultSetToClient(rs);
+                    calculateAndSetStatus(c);
+                    clients.add(c);
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -243,11 +286,8 @@ public class ClientDAO {
     }
 
     private Client mapResultSetToClient(ResultSet rs) throws SQLException {
-        // We use year-specific amounts if available in the result set
-        double amount = rs.getDouble("fixed_total_amount"); // Fallback
-        double ttc = rs.getDouble("ttc"); // Fallback
-
-        // Try to get yearly data if joined
+        double amount = rs.getDouble("fixed_total_amount");
+        double ttc = rs.getDouble("ttc");
         try {
             amount = rs.getDouble("yearly_amount");
         } catch (Exception e) {
@@ -280,5 +320,73 @@ public class ClientDAO {
                 ttc,
                 getCurrentYearId(),
                 rs.getBoolean("is_hidden"));
+    }
+
+    private void calculateAndSetStatus(Client client) {
+        int yearId = getCurrentYearId();
+        String sql = "SELECT " +
+                "SUM(CASE WHEN type = ? THEN amount ELSE 0 END) as total_fees, " +
+                "SUM(CASE WHEN type = ? THEN amount ELSE 0 END) as total_charges, " +
+                "SUM(CASE WHEN type = ? THEN amount ELSE 0 END) as total_payments, " +
+                "MAX(CASE WHEN type = ? THEN date ELSE NULL END) as last_payment_date " +
+                "FROM transactions WHERE client_id = ? AND year_id = ?";
+
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, Transaction.TYPE_HONORAIRE_EXTRA);
+            pstmt.setString(2, Transaction.TYPE_CHARGE);
+            pstmt.setString(3, Transaction.TYPE_PAYMENT);
+            pstmt.setString(4, Transaction.TYPE_PAYMENT);
+            pstmt.setInt(5, client.getId());
+            pstmt.setInt(6, yearId);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    double totalFeesExtra = rs.getDouble("total_fees");
+                    double totalCharges = rs.getDouble("total_charges");
+                    double totalPayments = rs.getDouble("total_payments");
+                    String lastPaymentDate = rs.getString("last_payment_date");
+
+                    double baseAmount = client.getTtc() > 0 ? client.getTtc() : client.getFixedTotalAmount();
+                    double totalFees = baseAmount + totalFeesExtra;
+                    double balance = totalFees + totalCharges - totalPayments;
+
+                    if (balance <= 0) {
+                        client.setStatus("GOOD");
+                    } else if (lastPaymentDate == null) {
+                        client.setStatus("LATE");
+                    } else {
+                        try {
+                            java.time.LocalDate lastDate = java.time.LocalDate.parse(lastPaymentDate);
+                            long days = java.time.temporal.ChronoUnit.DAYS.between(lastDate, java.time.LocalDate.now());
+                            if (days > 90) {
+                                client.setStatus("RISKY");
+                            } else {
+                                client.setStatus("GOOD");
+                            }
+                        } catch (Exception e) {
+                            client.setStatus("LATE");
+                        }
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error calculating client status: " + e.getMessage());
+        }
+    }
+
+    public boolean existsByIce(String ice) {
+        if (ice == null || ice.isEmpty())
+            return false;
+        String sql = "SELECT COUNT(*) FROM clients WHERE ice = ? AND is_hidden = 0";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, ice);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next())
+                    return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 }
