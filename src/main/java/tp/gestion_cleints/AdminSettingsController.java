@@ -2,10 +2,18 @@ package tp.gestion_cleints;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.stage.FileChooser;
+import java.io.File;
 import java.util.ResourceBundle;
 
 public class AdminSettingsController {
 
+    @FXML
+    private ImageView logoImageView;
+    @FXML
+    private Label noLogoLabel;
     @FXML
     private TextField raisonSocialeField;
     @FXML
@@ -31,6 +39,7 @@ public class AdminSettingsController {
     @FXML
     private Button saveButton;
 
+    private String currentLogoPath;
     private AdminDAO adminDAO = new AdminDAO();
     private ResourceBundle bundle;
 
@@ -64,6 +73,43 @@ public class AdminSettingsController {
         regimeTvaBox.setValue(info.getRegimeTva());
         emailField.setText(info.getEmail());
         phoneField.setText(info.getPhone());
+        currentLogoPath = info.getLogoPath();
+        updateLogoPreview();
+    }
+
+    private void updateLogoPreview() {
+        if (currentLogoPath != null && !currentLogoPath.isEmpty()) {
+            File file = new File(currentLogoPath);
+            if (file.exists()) {
+                try {
+                    logoImageView.setImage(new Image(file.toURI().toString()));
+                    noLogoLabel.setVisible(false);
+                } catch (Exception e) {
+                    System.err.println("Error loading logo: " + e.getMessage());
+                    logoImageView.setImage(null);
+                    noLogoLabel.setVisible(true);
+                }
+            } else {
+                logoImageView.setImage(null);
+                noLogoLabel.setVisible(true);
+            }
+        } else {
+            logoImageView.setImage(null);
+            noLogoLabel.setVisible(true);
+        }
+    }
+
+    @FXML
+    private void handleChangeLogo() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle(bundle.getString("admin.btn.change_logo"));
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg", "*.gif"));
+        File selectedFile = fileChooser.showOpenDialog(saveButton.getScene().getWindow());
+        if (selectedFile != null) {
+            currentLogoPath = selectedFile.getAbsolutePath();
+            updateLogoPreview();
+        }
     }
 
     @FXML
@@ -92,14 +138,19 @@ public class AdminSettingsController {
         info.setRegimeTva(regimeTvaBox.getValue());
         info.setEmail(email);
         info.setPhone(phoneField.getText());
+        info.setLogoPath(currentLogoPath);
 
-        adminDAO.updateAdminInfo(info);
+        boolean success = adminDAO.updateAdminInfo(info);
 
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(bundle.getString("alert.success"));
-        alert.setHeaderText(null);
-        alert.setContentText(bundle.getString("admin.save_success"));
-        alert.showAndWait();
+        if (success) {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle(bundle.getString("alert.success"));
+            alert.setHeaderText(null);
+            alert.setContentText(bundle.getString("admin.save_success"));
+            alert.showAndWait();
+        } else {
+            showAlert(bundle.getString("alert.error"), "Erreur lors de l'enregistrement des informations.");
+        }
     }
 
     private void showAlert(String title, String content) {

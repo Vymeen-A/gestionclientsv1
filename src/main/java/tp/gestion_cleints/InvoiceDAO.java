@@ -109,4 +109,24 @@ public class InvoiceDAO {
             e.printStackTrace();
         }
     }
+
+    public java.util.Map<String, Integer> getInvoiceStatusCounts() {
+        int yearId = SessionContext.getInstance().getCurrentYear() != null
+                ? SessionContext.getInstance().getCurrentYear().getId()
+                : 1;
+        String sql = "SELECT status, COUNT(*) as count FROM invoices WHERE year_id = ? GROUP BY status";
+        java.util.Map<String, Integer> counts = new java.util.HashMap<>();
+        try (Connection conn = DatabaseManager.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, yearId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    counts.put(rs.getString("status"), rs.getInt("count"));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return counts;
+    }
 }

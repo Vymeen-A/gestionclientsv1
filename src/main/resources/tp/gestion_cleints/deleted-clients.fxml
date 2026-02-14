@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.image.*?>
+
+<VBox spacing="20" styleClass="content-pane" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tp.gestion_cleints.DeletedClientsController">
+    <padding>
+        <Insets top="30" right="30" bottom="30" left="30"/>
+    </padding>
+
+    <HBox alignment="CENTER_LEFT" spacing="15">
+        <Button onAction="#handleBack" styleClass="button-secondary" text="%btn.view_active">
+            <graphic>
+                <Label text="←" style="-fx-font-size: 16px;"/>
+            </graphic>
+        </Button>
+        <VBox>
+            <Label text="%nav.deleted_clients" styleClass="header-title"/>
+            <Label text="%trash.subtitle" styleClass="header-subtitle"/>
+        </VBox>
+        <Region HBox.hgrow="ALWAYS" />
+        <TextField fx:id="searchField" promptText="%search.prompt" prefWidth="300" styleClass="search-field"/>
+    </HBox>
+
+    <TableView fx:id="clientTable" VBox.vgrow="ALWAYS" styleClass="modern-table">
+        <columns>
+            <TableColumn fx:id="idColumn" text="%column.id" prefWidth="60"/>
+            <TableColumn fx:id="nomPrenomColumn" text="%column.nom_prenom" prefWidth="250"/>
+            <TableColumn fx:id="raisonSocialeColumn" text="%column.raison_sociale" prefWidth="250"/>
+            <TableColumn fx:id="deletedAtColumn" text="Supprimé le" prefWidth="200"/>
+        </columns>
+        <placeholder>
+            <VBox alignment="CENTER" spacing="10">
+                <ImageView fitHeight="64" fitWidth="64" opacity="0.3">
+                    <image>
+                        <Image url="@images/logo1.png"/>
+                    </image>
+                </ImageView>
+                <Label text="%trash.empty" style="-fx-text-fill: #bdc3c7; -fx-font-size: 16px;"/>
+            </VBox>
+        </placeholder>
+    </TableView>
+
+    <HBox spacing="15" alignment="CENTER_RIGHT">
+        <Button text="%btn.restore" onAction="#handleRestoreClient" styleClass="button-primary"/>
+        <Button text="%btn.purge" onAction="#handlePermanentDelete" styleClass="button-danger" style="-fx-background-color: #e74c3c;"/>
+    </HBox>
+</VBox>

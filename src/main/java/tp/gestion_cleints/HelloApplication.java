@@ -31,13 +31,8 @@ public class HelloApplication extends Application {
         stage.setTitle("Login - Gestion Clients");
         stage.setScene(scene);
 
-        // Set application icon - use a more robust path
-        try {
-            stage.getIcons().add(new javafx.scene.image.Image(
-                    getClass().getResourceAsStream("images/logo.png")));
-        } catch (Exception e) {
-            System.err.println("Could not load application icon: " + e.getMessage());
-        }
+        // Set application icon
+        UIUtils.setStageIcon(stage);
 
         stage.initStyle(javafx.stage.StageStyle.UNDECORATED);
         javafx.stage.Screen screen = javafx.stage.Screen.getPrimary();

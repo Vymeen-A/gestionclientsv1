@@ -33,7 +33,12 @@ public class DatabaseManager {
             System.err.println("SQLite JDBC Driver not found");
             e.printStackTrace();
         }
-        return DriverManager.getConnection(DB_URL);
+        Connection conn = DriverManager.getConnection(DB_URL);
+        // Enable foreign keys for SQLite
+        try (Statement stmt = conn.createStatement()) {
+            stmt.execute("PRAGMA foreign_keys = ON;");
+        }
+        return conn;
     }
 
     public static void initializeDatabase() {
@@ -135,9 +140,40 @@ public class DatabaseManager {
                     + "full_name TEXT, "
                     + "email TEXT, "
                     + "phone TEXT, "
-                    + "profile_photo TEXT"
+                    + "profile_photo TEXT, "
+                    + "is_active BOOLEAN DEFAULT 1, "
+                    + "last_login TEXT, "
+                    + "failed_attempts INTEGER DEFAULT 0, "
+                    + "lockout_until TEXT"
                     + ");";
             stmt.execute(createUsersTable);
+
+            // Create client_documents table
+            String createDocumentsTable = "CREATE TABLE IF NOT EXISTS client_documents ("
+                    + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    + "client_id INTEGER, "
+                    + "file_name TEXT, "
+                    + "file_path TEXT, "
+                    + "upload_date TEXT, "
+                    + "FOREIGN KEY(client_id) REFERENCES clients(id) ON DELETE CASCADE"
+                    + ");";
+            stmt.execute(createDocumentsTable);
+
+            // Perform schema updates (migrations)
+            updateSchema(stmt);
+
+            // Cleanup old audit logs (Retention Policy: 1 Year)
+            AuditLogger.cleanupOldLogs();
+
+            // Create password_history table
+            String createPasswordHistoryTable = "CREATE TABLE IF NOT EXISTS password_history ("
+                    + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    + "username TEXT, "
+                    + "password_hash TEXT, "
+                    + "created_at DATETIME DEFAULT CURRENT_TIMESTAMP, "
+                    + "FOREIGN KEY(username) REFERENCES users(username) ON DELETE CASCADE"
+                    + ");";
+            stmt.execute(createPasswordHistoryTable);
 
             // Create admin_info table
             String createAdminInfoTable = "CREATE TABLE IF NOT EXISTS admin_info ("
@@ -152,7 +188,8 @@ public class DatabaseManager {
                     + "identifiant_tva TEXT, "
                     + "regime_tva TEXT, "
                     + "email TEXT, "
-                    + "phone TEXT"
+                    + "phone TEXT, "
+                    + "logo_path TEXT"
                     + ");";
             stmt.execute(createAdminInfoTable);
 
@@ -218,6 +255,21 @@ public class DatabaseManager {
                     + ");";
             stmt.execute(createTasksTable);
 
+            // Add Indexes for Performance & Scalability
+            String[] indexes = {
+                    "CREATE INDEX IF NOT EXISTS idx_transactions_client ON transactions(client_id)",
+                    "CREATE INDEX IF NOT EXISTS idx_transactions_year ON transactions(year_id)",
+                    "CREATE INDEX IF NOT EXISTS idx_clients_hidden ON clients(is_hidden)",
+                    "CREATE INDEX IF NOT EXISTS idx_clients_deleted ON clients(is_deleted)",
+                    "CREATE INDEX IF NOT EXISTS idx_clients_year ON clients(year_id)",
+                    "CREATE INDEX IF NOT EXISTS idx_invoices_client ON invoices(client_id)",
+                    "CREATE INDEX IF NOT EXISTS idx_year_data_client ON client_year_data(client_id)",
+                    "CREATE INDEX IF NOT EXISTS idx_year_data_year ON client_year_data(year_id)"
+            };
+            for (String idx : indexes) {
+                stmt.execute(idx);
+            }
+
             // Check admin existence (simplified)
             String checkAdmin = "SELECT COUNT(*) FROM users WHERE username = 'admin'";
             ResultSet rs = stmt.executeQuery(checkAdmin);
@@ -237,7 +289,11 @@ public class DatabaseManager {
             stmt.execute("UPDATE users SET role = 'ADMIN' WHERE username = 'admin'");
 
             // Migration: Add profile columns if missing
-            String[] userCols = { "full_name TEXT", "email TEXT", "phone TEXT", "profile_photo TEXT" };
+            String[] userCols = {
+                    "full_name TEXT", "email TEXT", "phone TEXT", "profile_photo TEXT",
+                    "is_active BOOLEAN DEFAULT 1", "last_login TEXT",
+                    "failed_attempts INTEGER DEFAULT 0", "lockout_until TEXT"
+            };
             for (String col : userCols) {
                 try {
                     stmt.execute("ALTER TABLE users ADD COLUMN " + col);
@@ -322,6 +378,54 @@ public class DatabaseManager {
         } catch (SQLException e) {
             System.err.println("Error initializing database: " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    private static void updateSchema(Statement stmt) {
+        try {
+            // Add category column
+            try {
+                stmt.execute("ALTER TABLE clients ADD COLUMN category TEXT");
+            } catch (SQLException e) {
+                // Column likely exists
+            }
+
+            // Add tags column
+            try {
+                stmt.execute("ALTER TABLE clients ADD COLUMN tags TEXT");
+            } catch (SQLException e) {
+                // Column likely exists
+            }
+
+            // Add is_deleted column
+            try {
+                stmt.execute("ALTER TABLE clients ADD COLUMN is_deleted BOOLEAN DEFAULT 0");
+            } catch (SQLException e) {
+                // Column likely exists
+            }
+
+            // Add deleted_at column
+            try {
+                stmt.execute("ALTER TABLE clients ADD COLUMN deleted_at TEXT");
+            } catch (SQLException e) {
+                // Column likely exists
+            }
+
+            // Ensure admin_info has all required columns (for migrations)
+            String[] adminCols = {
+                    "raison_sociale TEXT", "nom_prenom TEXT", "adresse TEXT", "ville TEXT",
+                    "ice TEXT", "rc TEXT", "tp TEXT", "identifiant_tva TEXT",
+                    "regime_tva TEXT", "email TEXT", "phone TEXT", "logo_path TEXT"
+            };
+            for (String col : adminCols) {
+                try {
+                    stmt.execute("ALTER TABLE admin_info ADD COLUMN " + col);
+                } catch (SQLException e) {
+                    // Column already exists
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Schema update warning: " + e.getMessage());
         }
     }
 }

@@ -11,8 +11,8 @@
     <HBox alignment="CENTER_LEFT" spacing="20">
         <Label text="%nav.audit_logs" styleClass="section-header"/>
         <Region HBox.hgrow="ALWAYS"/>
-        <Button text="Export PDF" onAction="#handleExport" styleClass="button-secondary"/>
-        <Button text="Refresh" onAction="#handleRefresh" styleClass="button-primary"/>
+        <Button text="%btn.export_pdf" onAction="#handleExport" styleClass="button-secondary"/>
+        <Button text="%btn.refresh" onAction="#handleRefresh" styleClass="button-primary"/>
         <Button text="%btn.back" onAction="#handleBack" styleClass="button-secondary"/>
     </HBox>
 

@@ -37,6 +37,22 @@ public class HiddenClientsController {
         villeColumn.setCellValueFactory(new PropertyValueFactory<>("ville"));
 
         loadHiddenClients();
+
+        searchField.textProperty().addListener((obs, oldVal, newVal) -> {
+            filterClients(newVal);
+        });
+    }
+
+    private void filterClients(String query) {
+        if (query == null || query.isEmpty()) {
+            loadHiddenClients();
+        } else {
+            ObservableList<Client> filtered = hiddenClients.filtered(c -> (c.getRaisonSociale() != null
+                    && c.getRaisonSociale().toLowerCase().contains(query.toLowerCase())) ||
+                    (c.getNomPrenom() != null && c.getNomPrenom().toLowerCase().contains(query.toLowerCase())) ||
+                    (c.getVille() != null && c.getVille().toLowerCase().contains(query.toLowerCase())));
+            clientTable.setItems(filtered);
+        }
     }
 
     private void loadHiddenClients() {

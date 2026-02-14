@@ -13,6 +13,12 @@ import javafx.scene.image.ImageView;
 import javafx.scene.image.Image;
 import java.util.ResourceBundle;
 import java.io.File;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.util.Duration;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.input.KeyEvent;
+import javafx.application.Platform;
 
 public class MainController {
 
@@ -29,8 +35,9 @@ public class MainController {
     @FXML
     private MenuItem userManagementItem, backupItem, auditLogsItem;
 
-    private String currentView = "dashboard.fxml";
+    private String currentView = "client-names.fxml";
     private ResourceBundle bundle;
+    private Timeline inactivityTimeline;
 
     @FXML
     public void initialize() {
@@ -38,6 +45,27 @@ public class MainController {
         refreshYearMenu();
         updateUserDisplay();
         applyPermissions();
+
+        Platform.runLater(this::setupInactivityTimer);
+    }
+
+    private void setupInactivityTimer() {
+        if (contentArea.getScene() == null)
+            return;
+
+        inactivityTimeline = new Timeline(new KeyFrame(Duration.minutes(15), e -> handleLogout()));
+        inactivityTimeline.setCycleCount(1);
+
+        contentArea.getScene().addEventFilter(MouseEvent.ANY, e -> resetInactivityTimer());
+        contentArea.getScene().addEventFilter(KeyEvent.ANY, e -> resetInactivityTimer());
+
+        inactivityTimeline.play();
+    }
+
+    private void resetInactivityTimer() {
+        if (inactivityTimeline != null) {
+            inactivityTimeline.playFromStart();
+        }
     }
 
     private void applyPermissions() {
@@ -151,6 +179,12 @@ public class MainController {
     }
 
     @FXML
+    public void showDeletedClients() {
+        currentView = "deleted-clients.fxml";
+        loadCurrentView();
+    }
+
+    @FXML
     public void showInvoiceAging() {
         currentView = "invoice-aging.fxml";
         loadCurrentView();
@@ -183,10 +217,11 @@ public class MainController {
     @FXML
     public void handleBackupRestore() {
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-        confirm.setTitle("Backup/Restore");
-        confirm.setHeaderText("Choose an action");
-        ButtonType btnBackupType = new ButtonType("Create Backup");
-        ButtonType btnRestoreType = new ButtonType("Restore Backup");
+        confirm.setTitle(bundle.getString("backup.title"));
+        confirm.setHeaderText(bundle.getString("backup.choose_action"));
+
+        ButtonType btnBackupType = new ButtonType(bundle.getString("btn.create_backup"));
+        ButtonType btnRestoreType = new ButtonType(bundle.getString("btn.restore_backup"));
         confirm.getButtonTypes().setAll(btnBackupType, btnRestoreType, ButtonType.CANCEL);
 
         confirm.showAndWait().ifPresent(type -> {
@@ -194,36 +229,61 @@ public class MainController {
                 try {
                     String path = DatabaseBackup.backup(new java.io.File(System.getProperty("user.home"), "backups"));
                     Alert info = new Alert(Alert.AlertType.INFORMATION);
-                    info.setContentText("Backup created at: " + path);
+                    info.setTitle(bundle.getString("alert.success"));
+                    info.setHeaderText(null);
+                    info.setContentText(
+                            java.text.MessageFormat.format(bundle.getString("backup.create_success"), path));
                     info.show();
                 } catch (Exception e) {
                     e.printStackTrace();
+                    showAlert(Alert.AlertType.ERROR, bundle.getString("alert.error"), e.getMessage());
                 }
             } else if (type == btnRestoreType) {
                 javafx.stage.FileChooser chooser = new javafx.stage.FileChooser();
+                chooser.setTitle(bundle.getString("btn.restore_backup"));
                 chooser.getExtensionFilters().add(new javafx.stage.FileChooser.ExtensionFilter("DB Files", "*.db"));
                 java.io.File file = chooser.showOpenDialog(contentArea.getScene().getWindow());
                 if (file != null) {
                     try {
                         FXMLLoader loader = new FXMLLoader(getClass().getResource("restore-wizard.fxml"));
+                        loader.setResources(bundle);
                         Parent root = loader.load();
                         RestoreWizardController wizard = loader.getController();
                         wizard.setBackupFile(file);
 
                         Stage stage = new Stage();
+                        stage.initOwner(contentArea.getScene().getWindow());
                         stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+                        stage.setTitle(bundle.getString("restore.wizard"));
                         stage.setScene(new javafx.scene.Scene(root));
+                        UIUtils.setStageIcon(stage);
                         stage.showAndWait();
 
                         if (wizard.isConfirmed()) {
-                            DatabaseBackup.restore(file);
-                            Alert info = new Alert(Alert.AlertType.INFORMATION);
-                            info.setContentText("Database restored successfully. Application might need restart.");
-                            info.show();
-                            showDashboard();
+                            try {
+                                DatabaseBackup.restore(file);
+                                Alert info = new Alert(Alert.AlertType.INFORMATION);
+                                info.setTitle(bundle.getString("alert.success"));
+                                info.setHeaderText(null);
+                                info.setContentText(bundle.getString("alert.restore_success"));
+                                info.showAndWait();
+
+                                // Reset session and reload
+                                SessionContext.getInstance().setCurrentYear(null);
+                                refreshYearMenu();
+                                showDashboard();
+                            } catch (IOException ex) {
+                                Alert error = new Alert(Alert.AlertType.ERROR);
+                                error.setTitle(bundle.getString("backup.restore_error_title"));
+                                error.setHeaderText(bundle.getString("backup.restore_error_header"));
+                                error.setContentText(java.text.MessageFormat
+                                        .format(bundle.getString("backup.restore_error_content"), ex.getMessage()));
+                                error.showAndWait();
+                            }
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
+                        showAlert(Alert.AlertType.ERROR, bundle.getString("alert.error"), e.getMessage());
                     }
                 }
             }
@@ -254,6 +314,7 @@ public class MainController {
 
             stage.setTitle(bundle.getString("btn.add_client"));
             stage.setScene(new javafx.scene.Scene(root));
+            UIUtils.setStageIcon(stage);
             stage.showAndWait();
 
             // Reload the view if we are on client list
@@ -298,6 +359,10 @@ public class MainController {
                 ((InvoiceAgingController) controller).setMainController(this);
             } else if (controller instanceof ProfileController) {
                 ((ProfileController) controller).setMainController(this);
+            } else if (controller instanceof PaymentTypesController) {
+                ((PaymentTypesController) controller).setMainController(this);
+            } else if (controller instanceof DeletedClientsController) {
+                ((DeletedClientsController) controller).setMainController(this);
             }
 
             contentArea.setCenter(view);
@@ -357,6 +422,17 @@ public class MainController {
     public void showProfile() {
         currentView = "profile.fxml";
         loadCurrentView();
+    }
+
+    private void showAlert(Alert.AlertType type, String title, String content) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        if (contentArea.getScene() != null) {
+            alert.initOwner(contentArea.getScene().getWindow());
+        }
+        alert.showAndWait();
     }
 
     @FXML

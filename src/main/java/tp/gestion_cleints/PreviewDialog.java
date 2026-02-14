@@ -47,25 +47,27 @@ public class PreviewDialog extends Dialog<Void> {
         getDialogPane().getStyleClass().add("preview-dialog");
 
         // Set icon
-        try {
-            javafx.stage.Stage stage = (javafx.stage.Stage) getDialogPane().getScene().getWindow();
-            stage.getIcons().add(new javafx.scene.image.Image(
-                    getClass().getResourceAsStream("images/logo.png")));
-        } catch (Exception e) {
-            System.err.println("Could not load preview icon: " + e.getMessage());
-        }
+        UIUtils.setStageIcon((javafx.stage.Stage) getDialogPane().getScene().getWindow());
 
         // Setup Toolbar
         ToolBar toolBar = createToolBar();
-        getDialogPane().setHeader(toolBar);
+
+        // Root layout
+        this.root = new BorderPane();
+        this.root.setTop(toolBar);
+
+        getDialogPane().setContent(root);
 
         getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
         Node closeBtn = getDialogPane().lookupButton(ButtonType.CLOSE);
         if (closeBtn != null)
             closeBtn.setVisible(false); // Hide standard button, use toolbar door button
 
-        getDialogPane().setPrefSize(700, 900);
+        setResizable(true);
+        getDialogPane().setPrefSize(1000, 700); // Safer height for laptops
     }
+
+    private final BorderPane root;
 
     private ToolBar createToolBar() {
         // Printer Selector
@@ -73,24 +75,24 @@ public class PreviewDialog extends Dialog<Void> {
         printerSelector.setItems(FXCollections.observableArrayList(Printer.getAllPrinters()));
         printerSelector.setValue(Printer.getDefaultPrinter());
         printerSelector.setStyle("-fx-font-size: 11px;");
-        printerSelector.setPrefWidth(180); // Reduced width
-        printerSelector.setMinWidth(120);
+        printerSelector.setPrefWidth(150); // Smaller width
+        printerSelector.setMinWidth(100);
 
         // Buttons
-        printButton = new Button("🖨️ Imprimer");
-        printButton.setStyle("-fx-font-size: 11px; -fx-padding: 5 10;");
+        printButton = new Button("Imprimer");
+        printButton.setStyle("-fx-font-size: 14px; -fx-padding: 8 15; -fx-font-weight: bold;");
         printButton.getStyleClass().add("button-primary");
         printButton.setOnAction(e -> handlePrint());
         printButton.setMinWidth(Region.USE_PREF_SIZE);
 
-        exportButton = new Button("📥 PDF");
-        exportButton.setStyle("-fx-font-size: 11px; -fx-padding: 5 10;");
+        exportButton = new Button("PDF");
+        exportButton.setStyle("-fx-font-size: 14px; -fx-padding: 8 15; -fx-font-weight: bold;");
         exportButton.getStyleClass().add("button-action");
         exportButton.setOnAction(e -> handleExport());
         exportButton.setMinWidth(Region.USE_PREF_SIZE);
 
-        cancelButton = new Button("❌");
-        cancelButton.setStyle("-fx-font-size: 14px; -fx-padding: 5 12; -fx-font-weight: bold;");
+        cancelButton = new Button("X");
+        cancelButton.setStyle("-fx-font-size: 16px; -fx-padding: 6 15; -fx-font-weight: bold;");
         cancelButton.getStyleClass().add("button-danger");
         cancelButton.setOnAction(e -> {
             setResult(null);
@@ -515,7 +517,9 @@ public class PreviewDialog extends Dialog<Void> {
         scroll.setFitToWidth(true);
         scroll.setPannable(true);
 
-        getDialogPane().setContent(scroll);
+        // FIX: Set the scroll pane as the center of the root layout (below toolbar)
+        // instead of replacing the entire dialog content
+        this.root.setCenter(scroll);
     }
 
     private void addStyledCell(GridPane grid, String text, int col, int row, boolean alignRight) {
@@ -528,21 +532,111 @@ public class PreviewDialog extends Dialog<Void> {
     }
 
     private Node createAdminHeader() {
-        if (adminInfo == null || adminInfo.getRaisonSociale() == null)
+        if (adminInfo == null)
+            return new Region();
+
+        boolean hasAnyInfo = (adminInfo.getRaisonSociale() != null && !adminInfo.getRaisonSociale().trim().isEmpty()) ||
+                (adminInfo.getAdresse() != null && !adminInfo.getAdresse().trim().isEmpty()) ||
+                (adminInfo.getPhone() != null && !adminInfo.getPhone().trim().isEmpty()) ||
+                (adminInfo.getEmail() != null && !adminInfo.getEmail().trim().isEmpty()) ||
+                (adminInfo.getIce() != null && !adminInfo.getIce().trim().isEmpty());
+
+        if (!hasAnyInfo)
             return new Region();
 
         VBox header = new VBox(2);
-        Label company = new Label(adminInfo.getRaisonSociale().toUpperCase());
-        company.setFont(Font.font("Segoe UI", FontWeight.BOLD, 22));
-        company.setStyle("-fx-text-fill: #2c3e50;");
+        header.setAlignment(Pos.TOP_LEFT);
 
-        String contact = (adminInfo.getAdresse() != null ? adminInfo.getAdresse() : "") + " " +
-                (adminInfo.getVille() != null ? adminInfo.getVille() : "");
+        // Logo
+        if (adminInfo.getLogoPath() != null && !adminInfo.getLogoPath().trim().isEmpty()) {
+            try {
+                java.io.File logoFile = new java.io.File(adminInfo.getLogoPath());
+                if (logoFile.exists()) {
+                    javafx.scene.image.ImageView logoView = new javafx.scene.image.ImageView(
+                            new javafx.scene.image.Image(logoFile.toURI().toString()));
+                    logoView.setFitHeight(60);
+                    logoView.setPreserveRatio(true);
+                    header.getChildren().add(logoView);
+                    VBox.setMargin(logoView, new Insets(0, 0, 10, 0));
+                }
+            } catch (Exception e) {
+                System.err.println("Could not load logo in preview: " + e.getMessage());
+            }
+        }
 
-        Label addr = new Label(contact);
-        addr.setStyle("-fx-text-fill: #7f8c8d; -fx-font-size: 12px;");
+        if (adminInfo.getRaisonSociale() != null && !adminInfo.getRaisonSociale().trim().isEmpty()) {
+            Label company = new Label(adminInfo.getRaisonSociale().toUpperCase());
+            company.setFont(Font.font("Segoe UI", FontWeight.BOLD, 22));
+            company.setStyle("-fx-text-fill: #2c3e50;");
+            header.getChildren().add(company);
+        }
 
-        header.getChildren().addAll(company, addr);
+        if (adminInfo.getNomPrenom() != null && !adminInfo.getNomPrenom().trim().isEmpty()) {
+            Label manager = new Label(adminInfo.getNomPrenom());
+            manager.setStyle("-fx-text-fill: #34495e; -fx-font-size: 14px; -fx-font-weight: bold;");
+            header.getChildren().add(manager);
+        }
+
+        // Address & Contact
+        String addrPart = adminInfo.getAdresse() != null ? adminInfo.getAdresse().trim() : "";
+        String cityPart = adminInfo.getVille() != null ? adminInfo.getVille().trim() : "";
+        String fullAddr = (addrPart + " " + cityPart).trim();
+
+        if (!fullAddr.isEmpty()) {
+            Label addr = new Label(fullAddr);
+            addr.setStyle("-fx-text-fill: #7f8c8d; -fx-font-size: 12px;");
+            header.getChildren().add(addr);
+        }
+
+        HBox contactLine = new HBox(15);
+        if (adminInfo.getPhone() != null && !adminInfo.getPhone().trim().isEmpty()) {
+            Label p = new Label("Tél: " + adminInfo.getPhone());
+            p.setStyle("-fx-text-fill: #7f8c8d; -fx-font-size: 11px;");
+            contactLine.getChildren().add(p);
+        }
+        if (adminInfo.getEmail() != null && !adminInfo.getEmail().trim().isEmpty()) {
+            Label e = new Label("Email: " + adminInfo.getEmail());
+            e.setStyle("-fx-text-fill: #7f8c8d; -fx-font-size: 11px;");
+            contactLine.getChildren().add(e);
+        }
+
+        // Legal Info Line
+        HBox legalLine = new HBox(15);
+        if (adminInfo.getIce() != null && !adminInfo.getIce().trim().isEmpty()) {
+            Label i = new Label("ICE: " + adminInfo.getIce());
+            i.setStyle("-fx-text-fill: #95a5a6; -fx-font-size: 10px; -fx-font-weight: bold;");
+            legalLine.getChildren().add(i);
+        }
+        if (adminInfo.getRc() != null && !adminInfo.getRc().trim().isEmpty()) {
+            Label r = new Label("RC: " + adminInfo.getRc());
+            r.setStyle("-fx-text-fill: #95a5a6; -fx-font-size: 10px;");
+            legalLine.getChildren().add(r);
+        }
+        if (adminInfo.getTp() != null && !adminInfo.getTp().trim().isEmpty()) {
+            Label t = new Label("TP: " + adminInfo.getTp());
+            t.setStyle("-fx-text-fill: #95a5a6; -fx-font-size: 10px;");
+            legalLine.getChildren().add(t);
+        }
+        if (adminInfo.getIdentifiantTva() != null && !adminInfo.getIdentifiantTva().trim().isEmpty()) {
+            Label f = new Label("IF: " + adminInfo.getIdentifiantTva());
+            f.setStyle("-fx-text-fill: #95a5a6; -fx-font-size: 10px;");
+            legalLine.getChildren().add(f);
+        }
+        if (adminInfo.getRegimeTva() != null && !adminInfo.getRegimeTva().trim().isEmpty()) {
+            Label reg = new Label("Régime: " + adminInfo.getRegimeTva());
+            reg.setStyle("-fx-text-fill: #95a5a6; -fx-font-size: 10px;");
+            legalLine.getChildren().add(reg);
+        }
+
+        if (!contactLine.getChildren().isEmpty())
+            header.getChildren().add(contactLine);
+        if (!legalLine.getChildren().isEmpty())
+            header.getChildren().add(legalLine);
+
+        Separator sep = new Separator();
+        sep.setPadding(new Insets(10, 0, 10, 0));
+        header.getChildren().add(sep);
+
         return header;
     }
 

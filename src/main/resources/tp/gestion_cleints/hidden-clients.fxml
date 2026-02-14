@@ -10,22 +10,22 @@
     </padding>
 
     <HBox alignment="CENTER_LEFT" spacing="20">
-        <Label text="Hidden Clients" styleClass="title-label"/>
+        <Label text="%nav.hidden_clients" styleClass="section-header"/>
         <Region HBox.hgrow="ALWAYS" />
-        <TextField fx:id="searchField" promptText="Search hidden clients..." prefWidth="300" styleClass="search-field"/>
+        <TextField fx:id="searchField" promptText="%search.prompt" prefWidth="300"/>
     </HBox>
 
-    <TableView fx:id="clientTable" VBox.vgrow="ALWAYS" styleClass="modern-table">
+    <TableView fx:id="clientTable" VBox.vgrow="ALWAYS">
         <columns>
-            <TableColumn fx:id="idColumn" text="ID" prefWidth="50" />
-            <TableColumn fx:id="raisonSocialeColumn" text="Raison Sociale" prefWidth="250" />
-            <TableColumn fx:id="nomPrenomColumn" text="Nom &amp; Prénom" prefWidth="200" />
-            <TableColumn fx:id="villeColumn" text="Ville" prefWidth="120" />
+            <TableColumn fx:id="idColumn" text="%column.id" prefWidth="50" />
+            <TableColumn fx:id="raisonSocialeColumn" text="%column.raison_sociale" prefWidth="250" />
+            <TableColumn fx:id="nomPrenomColumn" text="%column.nom_prenom" prefWidth="200" />
+            <TableColumn fx:id="villeColumn" text="%column.ville" prefWidth="120" />
         </columns>
     </TableView>
 
     <HBox spacing="15" alignment="CENTER_RIGHT">
-        <Button text="Unhide Client" onAction="#handleUnhideClient" styleClass="button-primary"/>
-        <Button text="Back" onAction="#handleBack" styleClass="button-secondary"/>
+        <Button text="%btn.unhide" onAction="#handleUnhideClient" styleClass="button-primary"/>
+        <Button text="%btn.back" onAction="#handleBack" styleClass="button-secondary"/>
     </HBox>
 </VBox>

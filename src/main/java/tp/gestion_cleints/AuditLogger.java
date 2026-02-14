@@ -3,6 +3,7 @@ package tp.gestion_cleints;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 public class AuditLogger {
 
@@ -31,5 +32,18 @@ public class AuditLogger {
     public static void exportLogs() {
         // Logic for PDF export would go here
         // Standardizing system actions for compliance
+    }
+
+    public static void cleanupOldLogs() {
+        String sql = "DELETE FROM audit_logs WHERE timestamp < datetime('now', '-1 year')";
+        try (Connection conn = DatabaseManager.getConnection();
+                Statement stmt = conn.createStatement()) {
+            int deletedCount = stmt.executeUpdate(sql);
+            if (deletedCount > 0) {
+                System.out.println("Cleaned up " + deletedCount + " old audit logs.");
+            }
+        } catch (SQLException e) {
+            System.err.println("Audit log cleanup error: " + e.getMessage());
+        }
     }
 }

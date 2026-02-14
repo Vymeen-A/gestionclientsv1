@@ -12,6 +12,7 @@ public class AdminInfo {
     private String regimeTva;
     private String email;
     private String phone;
+    private String logoPath;
 
     public AdminInfo() {
     }
@@ -103,5 +104,13 @@ public class AdminInfo {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public String getLogoPath() {
+        return logoPath;
+    }
+
+    public void setLogoPath(String logoPath) {
+        this.logoPath = logoPath;
     }
 }

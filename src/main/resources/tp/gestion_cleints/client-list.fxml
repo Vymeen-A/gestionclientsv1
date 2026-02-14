@@ -17,29 +17,29 @@
         </HBox>
         
         <HBox spacing="10" alignment="CENTER_LEFT">
-            <Button text="%btn.add_client" onAction="#handleAddClient" styleClass="button-primary"/>
-            <Button text="%btn.edit" onAction="#handleEditClient" styleClass="button-secondary"/>
-            <Button text="%btn.details" onAction="#handleViewDetails" styleClass="button-secondary"/>
+            <Button text="%btn.add_client" onAction="#handleAddClient" styleClass="button-success"/>
+            <Button text="%btn.edit" onAction="#handleEditClient" styleClass="button-primary"/>
+            <Button text="%btn.details" onAction="#handleViewDetails" styleClass="button-action"/>
             <Button text="%btn.delete" onAction="#handleDeleteClient" styleClass="button-danger"/>
             <Region HBox.hgrow="ALWAYS"/>
             <Button text="%btn.export_data" onAction="#handleExportData" styleClass="button-secondary"/>
             <Button text="%btn.import_data" onAction="#handleImportData" styleClass="button-secondary"/>
+            <Button text="%btn.show_deleted" styleClass="button-secondary" onAction="#handleToggleDeleted" />
         </HBox>
 
-        <TableView fx:id="clientTable" prefHeight="500">
+        <TableView fx:id="clientTable" VBox.vgrow="ALWAYS">
             <columns>
-                <TableColumn fx:id="statusColumn" text="●" prefWidth="40"/>
-                <TableColumn fx:id="idColumn" text="%column.id" prefWidth="50"/>
-                <TableColumn fx:id="raisonSocialeColumn" text="%column.raison_sociale" prefWidth="250"/>
-                <TableColumn fx:id="nomPrenomColumn" text="%column.nom_prenom" prefWidth="200"/>
-                <TableColumn fx:id="villeColumn" text="%column.ville" prefWidth="120"/>
-                <TableColumn fx:id="fixedAmountColumn" text="%column.ht" prefWidth="120"/>
-                <TableColumn fx:id="ttcColumn" text="%column.ttc" prefWidth="120"/>
-                <TableColumn fx:id="actionsColumn" text="%column.action" prefWidth="100"/>
+                <TableColumn fx:id="nomPrenomColumn" text="%column.nom_prenom" prefWidth="250"/>
+                <TableColumn fx:id="honorairesColumn" text="%column.honoraires" prefWidth="120"/>
+                <TableColumn fx:id="autresColumn" text="%column.autres" prefWidth="120"/>
+                <TableColumn fx:id="totalHonEtTtColumn" text="%column.total_hon_tt" prefWidth="150"/>
+                <TableColumn fx:id="totalDesAvanceColumn" text="%column.total_avance" prefWidth="150"/>
+                <TableColumn fx:id="resteColumn" text="%column.reste" prefWidth="120"/>
             </columns>
             <columnResizePolicy>
                 <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
             </columnResizePolicy>
         </TableView>
+
     </VBox>
 </ScrollPane>

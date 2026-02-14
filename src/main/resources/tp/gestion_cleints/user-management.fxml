@@ -10,34 +10,44 @@
       styleClass="content-area" spacing="20">
       
     <HBox alignment="CENTER_LEFT" spacing="20">
-        <Label text="User Management" styleClass="section-header"/>
+        <Label text="%user.title" styleClass="section-header"/>
         <Region HBox.hgrow="ALWAYS"/>
         <Button text="%btn.back" onAction="#handleBack" styleClass="button-secondary"/>
     </HBox>
 
-    <HBox spacing="15" alignment="CENTER_LEFT">
-        <VBox spacing="5" HBox.hgrow="ALWAYS">
-            <Label text="Username"/>
-            <TextField fx:id="usernameField" promptText="Enter username"/>
-        </VBox>
-        <VBox spacing="5" HBox.hgrow="ALWAYS">
-            <Label text="Password"/>
-            <PasswordField fx:id="passwordField" promptText="Enter password"/>
-        </VBox>
-        <VBox spacing="5" HBox.hgrow="ALWAYS">
-            <Label text="Role"/>
-            <ComboBox fx:id="roleCombo" prefWidth="150"/>
-        </VBox>
-        <VBox alignment="BOTTOM_CENTER">
-            <Button text="Add User" onAction="#handleAddUser" styleClass="button-primary"/>
-        </VBox>
+    <VBox spacing="10" styleClass="stat-card">
+        <Label text="%user.add" styleClass="stat-title" style="-fx-font-size: 14px;"/>
+        <HBox spacing="15" alignment="CENTER_LEFT">
+            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                <Label text="%user.username"/>
+                <TextField fx:id="usernameField" promptText="%prompt.username"/>
+            </VBox>
+            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                <Label text="%user.password"/>
+                <PasswordField fx:id="passwordField" promptText="%prompt.password"/>
+            </VBox>
+            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                <Label text="%user.role"/>
+                <ComboBox fx:id="roleCombo" prefWidth="150" styleClass="combo-box-styled"/>
+            </VBox>
+            <VBox alignment="BOTTOM_CENTER">
+                <Button text="%user.add" onAction="#handleAddUser" styleClass="button-primary"/>
+            </VBox>
+        </HBox>
+    </VBox>
+
+    <HBox alignment="CENTER_LEFT" spacing="10">
+        <Label text="%user.status" style="-fx-font-weight: bold;"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <TextField fx:id="searchField" promptText="%search.prompt" prefWidth="300" styleClass="search-field"/>
     </HBox>
 
     <TableView fx:id="userTable" VBox.vgrow="ALWAYS">
         <columns>
-            <TableColumn fx:id="usernameColumn" text="Username" prefWidth="200"/>
-            <TableColumn fx:id="roleColumn" text="Role" prefWidth="150"/>
-            <TableColumn fx:id="actionsColumn" text="Actions" prefWidth="100"/>
+            <TableColumn fx:id="usernameColumn" text="%user.username" prefWidth="200"/>
+            <TableColumn fx:id="roleColumn" text="%user.role" prefWidth="150"/>
+            <TableColumn fx:id="statusColumn" text="%user.status" prefWidth="100"/>
+            <TableColumn fx:id="actionsColumn" text="%column.action" prefWidth="150"/>
         </columns>
         <columnResizePolicy>
             <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>

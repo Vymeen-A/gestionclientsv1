@@ -4,82 +4,132 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 
-<VBox xmlns:fx="http://javafx.com/fxml" 
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" 
     fx:controller="tp.gestion_cleints.ClientFormController" 
-    spacing="25" styleClass="content-area" 
-    prefWidth="700" prefHeight="750"
+    spacing="15" styleClass="content-area" 
+    prefWidth="800" prefHeight="700"
     stylesheets="@styles.css">
     
     <Label text="%client.registration" styleClass="section-header"/>
     
-    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: white; -fx-padding: 10;">
-        <GridPane hgap="30" vgap="20" styleClass="stat-card">
-            <columnConstraints>
-                <ColumnConstraints minWidth="150" prefWidth="200" />
-                <ColumnConstraints hgrow="ALWAYS" />
-            </columnConstraints>
+    <TabPane VBox.vgrow="ALWAYS" tabClosingPolicy="UNAVAILABLE" styleClass="my-tab-pane">
+        <tabs>
+            <Tab text="%form.tab.general">
+                <ScrollPane fitToWidth="true" style="-fx-background-color: white; -fx-padding: 20;">
+                    <GridPane hgap="20" vgap="15">
+                        <columnConstraints>
+                            <ColumnConstraints minWidth="150" prefWidth="180" />
+                            <ColumnConstraints hgrow="ALWAYS" />
+                        </columnConstraints>
+                        
+                        <Label text="%client.raison_sociale" GridPane.columnIndex="0" GridPane.rowIndex="0" styleClass="summary-label-title"/>
+                        <TextField fx:id="raisonSocialeField" GridPane.columnIndex="1" GridPane.rowIndex="0" promptText="%client.raison_sociale"/>
 
-            <Label text="%client.raison_sociale" GridPane.columnIndex="0" GridPane.rowIndex="0" styleClass="summary-label-title"/>
-            <TextField fx:id="raisonSocialeField" GridPane.columnIndex="1" GridPane.rowIndex="0" promptText="%client.raison_sociale"/>
+                        <Label text="%client.nom_prenom" GridPane.columnIndex="0" GridPane.rowIndex="1" styleClass="summary-label-title"/>
+                        <TextField fx:id="nomPrenomField" GridPane.columnIndex="1" GridPane.rowIndex="1" promptText="%form.name_prompt"/>
 
-            <Label text="%client.nom_prenom" GridPane.columnIndex="0" GridPane.rowIndex="1" styleClass="summary-label-title"/>
-            <TextField fx:id="nomPrenomField" GridPane.columnIndex="1" GridPane.rowIndex="1" promptText="%form.name_prompt"/>
+                        <Label text="%client.adresse" GridPane.columnIndex="0" GridPane.rowIndex="2" styleClass="summary-label-title"/>
+                        <TextField fx:id="adresseField" GridPane.columnIndex="1" GridPane.rowIndex="2" promptText="%form.address_prompt"/>
 
-            <Label text="%client.adresse" GridPane.columnIndex="0" GridPane.rowIndex="2" styleClass="summary-label-title"/>
-            <TextField fx:id="adresseField" GridPane.columnIndex="1" GridPane.rowIndex="2" promptText="%form.address_prompt"/>
+                        <Label text="%client.ville" GridPane.columnIndex="0" GridPane.rowIndex="3" styleClass="summary-label-title"/>
+                        <TextField fx:id="villeField" GridPane.columnIndex="1" GridPane.rowIndex="3" promptText="%client.ville"/>
+                        
+                        <Label text="%client.email" GridPane.columnIndex="0" GridPane.rowIndex="4" styleClass="summary-label-title"/>
+                        <TextField fx:id="emailField" GridPane.columnIndex="1" GridPane.rowIndex="4" promptText="%form.email_prompt"/>
+                        
+                        <Label text="%client.secteur" GridPane.columnIndex="0" GridPane.rowIndex="5" styleClass="summary-label-title"/>
+                        <TextField fx:id="secteurField" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
+                    </GridPane>
+                </ScrollPane>
+            </Tab>
+            
+             <Tab text="%form.tab.fiscal">
+                <ScrollPane fitToWidth="true" style="-fx-background-color: white; -fx-padding: 20;">
+                    <GridPane hgap="20" vgap="15">
+                        <columnConstraints>
+                            <ColumnConstraints minWidth="150" prefWidth="180" />
+                            <ColumnConstraints hgrow="ALWAYS" />
+                        </columnConstraints>
 
-            <Label text="%client.ville" GridPane.columnIndex="0" GridPane.rowIndex="3" styleClass="summary-label-title"/>
-            <TextField fx:id="villeField" GridPane.columnIndex="1" GridPane.rowIndex="3" promptText="%client.ville"/>
+                        <Label text="%client.ice" GridPane.columnIndex="0" GridPane.rowIndex="0" styleClass="summary-label-title"/>
+                        <TextField fx:id="iceField" GridPane.columnIndex="1" GridPane.rowIndex="0" promptText="%prompt.registration_number"/>
 
-            <Label text="%client.ice" GridPane.columnIndex="0" GridPane.rowIndex="4" styleClass="summary-label-title"/>
-            <TextField fx:id="iceField" GridPane.columnIndex="1" GridPane.rowIndex="4" promptText="%prompt.registration_number"/>
+                        <Label text="%client.rc" GridPane.columnIndex="0" GridPane.rowIndex="1" styleClass="summary-label-title"/>
+                        <TextField fx:id="rcField" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
 
-            <Label text="%client.rc" GridPane.columnIndex="0" GridPane.rowIndex="5" styleClass="summary-label-title"/>
-            <TextField fx:id="rcField" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
+                        <Label text="%client.tp" GridPane.columnIndex="0" GridPane.rowIndex="2" styleClass="summary-label-title"/>
+                        <TextField fx:id="tpField" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
 
-            <Label text="%client.tp" GridPane.columnIndex="0" GridPane.rowIndex="6" styleClass="summary-label-title"/>
-            <TextField fx:id="tpField" GridPane.columnIndex="1" GridPane.rowIndex="6"/>
+                        <Label text="%client.taxe_habit" GridPane.columnIndex="0" GridPane.rowIndex="3" styleClass="summary-label-title"/>
+                        <TextField fx:id="taxeHabitField" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
 
-            <Label text="%client.taxe_habit" GridPane.columnIndex="0" GridPane.rowIndex="7" styleClass="summary-label-title"/>
-            <TextField fx:id="taxeHabitField" GridPane.columnIndex="1" GridPane.rowIndex="7"/>
+                        <Label text="%client.tva" GridPane.columnIndex="0" GridPane.rowIndex="4" styleClass="summary-label-title"/>
+                        <TextField fx:id="tvaField" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
 
-            <Label text="%client.tva" GridPane.columnIndex="0" GridPane.rowIndex="8" styleClass="summary-label-title"/>
-            <TextField fx:id="tvaField" GridPane.columnIndex="1" GridPane.rowIndex="8"/>
+                        <Label text="%client.regime_tva" GridPane.columnIndex="0" GridPane.rowIndex="5" styleClass="summary-label-title"/>
+                        <TextField fx:id="regimeTvaField" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
+                        
+                        <Label text="%client.rib" GridPane.columnIndex="0" GridPane.rowIndex="6" styleClass="summary-label-title"/>
+                        <TextField fx:id="ribField" GridPane.columnIndex="1" GridPane.rowIndex="6"/>
+                    </GridPane>
+                </ScrollPane>
+            </Tab>
+            
+            <Tab text="%form.tab.financial">
+                <ScrollPane fitToWidth="true" style="-fx-background-color: white; -fx-padding: 20;">
+                    <GridPane hgap="20" vgap="15">
+                         <columnConstraints>
+                            <ColumnConstraints minWidth="150" prefWidth="180" />
+                            <ColumnConstraints hgrow="ALWAYS" />
+                        </columnConstraints>
+                        
+                        <Label text="%client.fixed_total" GridPane.columnIndex="0" GridPane.rowIndex="0" styleClass="summary-label-value"/>
+                        <TextField fx:id="fixedTotalAmountField" GridPane.columnIndex="1" GridPane.rowIndex="0" style="-fx-border-color: #3498db;"/>
+                        
+                        <Label text="%client.ttc" GridPane.columnIndex="0" GridPane.rowIndex="1" styleClass="summary-label-title"/>
+                        <TextField fx:id="ttcField" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                        
+                        <Label text="%client.debut_act" GridPane.columnIndex="0" GridPane.rowIndex="2" styleClass="summary-label-title"/>
+                        <TextField fx:id="debutActField" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                        
+                        <Label text="%client.fax" GridPane.columnIndex="0" GridPane.rowIndex="3" styleClass="summary-label-title"/>
+                        <TextField fx:id="faxField" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+                        
+                        <Label text="%client.username" GridPane.columnIndex="0" GridPane.rowIndex="4" styleClass="summary-label-title"/>
+                        <TextField fx:id="usernameField" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
 
-            <Label text="%client.regime_tva" GridPane.columnIndex="0" GridPane.rowIndex="9" styleClass="summary-label-title"/>
-            <TextField fx:id="regimeTvaField" GridPane.columnIndex="1" GridPane.rowIndex="9"/>
+                        <Label text="%client.password" GridPane.columnIndex="0" GridPane.rowIndex="5" styleClass="summary-label-title"/>
+                        <TextField fx:id="passwordField" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
+                    </GridPane>
+                </ScrollPane>
+            </Tab>
+            
+            <Tab text="%client.documents">
+                <VBox spacing="10" style="-fx-padding: 20;">
+                     <TableView fx:id="documentsTable" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="docNameCol" text="%doc.column.name" prefWidth="300"/>
+                            <TableColumn fx:id="docDateCol" text="%doc.column.date" prefWidth="150"/>
+                            <TableColumn fx:id="docActionCol" text="%column.action" prefWidth="100"/>
+                        </columns>
+                        <placeholder>
+                            <Label text="%doc.no_documents"/>
+                        </placeholder>
+                    </TableView>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Button text="%doc.btn.add" onAction="#handleUploadDocument" styleClass="button-secondary">
+                             <graphic>
+                                <Label text="+" style="-fx-text-fill: grey; -fx-font-weight: bold;"/>
+                            </graphic>
+                        </Button>
+                    </HBox>
+                </VBox>
+            </Tab>
+        </tabs>
+    </TabPane>
 
-            <Label text="%client.fax" GridPane.columnIndex="0" GridPane.rowIndex="10" styleClass="summary-label-title"/>
-            <TextField fx:id="faxField" GridPane.columnIndex="1" GridPane.rowIndex="10"/>
-
-            <Label text="%client.email" GridPane.columnIndex="0" GridPane.rowIndex="11" styleClass="summary-label-title"/>
-            <TextField fx:id="emailField" GridPane.columnIndex="1" GridPane.rowIndex="11" promptText="%form.email_prompt"/>
-
-            <Label text="%client.ttc" GridPane.columnIndex="0" GridPane.rowIndex="12" styleClass="summary-label-title"/>
-            <TextField fx:id="ttcField" GridPane.columnIndex="1" GridPane.rowIndex="12"/>
-
-            <Label text="%client.rib" GridPane.columnIndex="0" GridPane.rowIndex="13" styleClass="summary-label-title"/>
-            <TextField fx:id="ribField" GridPane.columnIndex="1" GridPane.rowIndex="13"/>
-
-            <Label text="%client.username" GridPane.columnIndex="0" GridPane.rowIndex="14" styleClass="summary-label-title"/>
-            <TextField fx:id="usernameField" GridPane.columnIndex="1" GridPane.rowIndex="14"/>
-
-            <Label text="%client.password" GridPane.columnIndex="0" GridPane.rowIndex="15" styleClass="summary-label-title"/>
-            <TextField fx:id="passwordField" GridPane.columnIndex="1" GridPane.rowIndex="15"/>
-
-            <Label text="%client.secteur" GridPane.columnIndex="0" GridPane.rowIndex="16" styleClass="summary-label-title"/>
-            <TextField fx:id="secteurField" GridPane.columnIndex="1" GridPane.rowIndex="16"/>
-
-            <Label text="%client.debut_act" GridPane.columnIndex="0" GridPane.rowIndex="17" styleClass="summary-label-title"/>
-            <TextField fx:id="debutActField" GridPane.columnIndex="1" GridPane.rowIndex="17"/>
-
-            <Label text="%client.fixed_total" GridPane.columnIndex="0" GridPane.rowIndex="18" styleClass="summary-label-value" style="-fx-font-size: 14px;"/>
-            <TextField fx:id="fixedTotalAmountField" GridPane.columnIndex="1" GridPane.rowIndex="18" style="-fx-border-color: #3498db;"/>
-        </GridPane>
-    </ScrollPane>
-
-    <HBox spacing="15" alignment="CENTER_RIGHT" style="-fx-padding: 10 0 0 0;">
-        <Button text="%btn.cancel" onAction="#handleCancel" styleClass="button-secondary" prefWidth="120"/>
-        <Button text="%btn.save" onAction="#handleSave" styleClass="button-primary" prefWidth="150"/>
+    <HBox spacing="15" alignment="CENTER_RIGHT" style="-fx-padding: 20 0 0 0;">
+        <Button text="%btn.cancel" onAction="#handleCancel" styleClass="button-secondary" prefWidth="130"/>
+        <Button text="%btn.save" onAction="#handleSave" styleClass="button-primary" prefWidth="160"/>
     </HBox>
 </VBox>

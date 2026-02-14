@@ -11,7 +11,7 @@
 
     <VBox styleClass="content-area" spacing="20">
         <HBox alignment="CENTER_LEFT" spacing="20">
-            <Label text="Clients Overview (Names Only)" styleClass="section-header"/>
+            <Label fx:id="headerLabel" text="%nav.client_summary" styleClass="section-header"/>
             <Region HBox.hgrow="ALWAYS"/>
             <TextField fx:id="searchField" promptText="%search.prompt" prefWidth="300"/>
         </HBox>

@@ -53,6 +53,7 @@ public class InvoiceListController {
         }
         setupColumns();
         loadInvoices();
+        UIUtils.applyFastScroll(invoiceTable);
     }
 
     private void setupColumns() {
@@ -62,7 +63,7 @@ public class InvoiceListController {
         totalColumn.setCellValueFactory(new PropertyValueFactory<>("totalTtc"));
         statusColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
 
-        String currency = bundle != null ? bundle.getString("currency") : "MAD";
+        String currency = bundle != null ? bundle.getString("currency") : "DH";
         totalColumn.setCellFactory(tc -> new TableCell<Invoice, Double>() {
             @Override
             protected void updateItem(Double item, boolean empty) {

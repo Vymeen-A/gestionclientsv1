@@ -2,8 +2,8 @@ package tp.gestion_cleints;
 
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.scene.chart.BarChart;
-import javafx.scene.chart.XYChart;
+import javafx.scene.chart.PieChart;
+// PieChart doesn't need XYChart
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -17,9 +17,9 @@ public class DashboardController {
     @FXML
     public Label totalRevenueLabel;
     @FXML
-    public Label avgRevenueLabel;
+    public Label totalDueLabel;
     @FXML
-    public Label topClientLabel;
+    public Label totalPaidLabel;
 
     @FXML
     public TableView<Client> recentClientsTable;
@@ -29,9 +29,10 @@ public class DashboardController {
     public TableColumn<Client, Double> recentRevenueColumn;
 
     @FXML
-    public BarChart<String, Number> revenueChart;
+    public PieChart invoiceChart;
 
     private ClientDAO clientDAO;
+    private InvoiceDAO invoiceDAO;
     private MainController mainController;
     private ResourceBundle bundle;
 
@@ -41,6 +42,7 @@ public class DashboardController {
 
     public void initialize() {
         clientDAO = new ClientDAO();
+        invoiceDAO = new InvoiceDAO();
         // stats are loaded in refresh() which is called by MainController
     }
 
@@ -52,20 +54,19 @@ public class DashboardController {
     }
 
     private void updateStatistics() {
-        int total = clientDAO.getTotalClients();
-        double revenue = clientDAO.getTotalRevenue();
-        String topClient = clientDAO.getTopClientName();
-        double avgRevenue = total > 0 ? revenue / total : 0.0;
-        String currency = bundle != null ? bundle.getString("currency") : "MAD";
+        int totalClients = clientDAO.getTotalClients();
+        double totalRevenue = clientDAO.getTotalRevenue();
+        double totalDue = clientDAO.getTotalAmountDue();
+        double totalPaid = clientDAO.getTotalPaid();
+        String currency = bundle != null ? bundle.getString("currency") : "DH";
+        totalClientsLabel.setText(String.valueOf(totalClients));
+        totalRevenueLabel.setText(String.format("%.2f %s", totalRevenue, currency));
 
-        totalClientsLabel.setText(String.valueOf(total));
-        totalRevenueLabel.setText(String.format("%.2f %s", revenue, currency));
-
-        if (avgRevenueLabel != null) {
-            avgRevenueLabel.setText(String.format("%.2f %s", avgRevenue, currency));
+        if (totalDueLabel != null) {
+            totalDueLabel.setText(String.format("%.2f %s", totalDue, currency));
         }
-        if (topClientLabel != null) {
-            topClientLabel.setText(topClient);
+        if (totalPaidLabel != null) {
+            totalPaidLabel.setText(String.format("%.2f %s", totalPaid, currency));
         }
     }
 
@@ -74,7 +75,7 @@ public class DashboardController {
         recentRevenueColumn.setCellValueFactory(new PropertyValueFactory<>("fixedTotalAmount"));
 
         recentClientsTable.setItems(FXCollections.observableArrayList(
-                clientDAO.getRecentClients(5)));
+                clientDAO.getRecentClients(10)));
 
         // Handle click to navigate
         recentClientsTable.setOnMouseClicked(event -> {
@@ -87,15 +88,31 @@ public class DashboardController {
         });
     }
 
-    private void setupChart() {
-        revenueChart.getData().clear();
-        XYChart.Series<String, Number> series = new XYChart.Series<>();
-        String seriesName = bundle != null ? bundle.getString("chart.series") : "Revenue";
-        series.setName(seriesName);
+    @FXML
+    public javafx.scene.chart.BarChart<String, Number> clientGrowthChart;
 
-        for (Client c : clientDAO.getRecentClients(5)) {
-            series.getData().add(new XYChart.Data<>(c.getRaisonSociale(), c.getFixedTotalAmount()));
+    @FXML
+    public javafx.scene.chart.CategoryAxis xAxis;
+
+    @FXML
+    public javafx.scene.chart.NumberAxis yAxis;
+
+    private void setupChart() {
+        if (clientGrowthChart == null)
+            return;
+
+        clientGrowthChart.getData().clear();
+
+        javafx.scene.chart.XYChart.Series<String, Number> series = new javafx.scene.chart.XYChart.Series<>();
+        series.setName("Nouveaux Clients");
+
+        // Fetch real data from database
+        java.util.Map<String, Integer> growthData = clientDAO.getRecentClientGrowth();
+
+        for (java.util.Map.Entry<String, Integer> entry : growthData.entrySet()) {
+            series.getData().add(new javafx.scene.chart.XYChart.Data<>(entry.getKey(), entry.getValue()));
         }
-        revenueChart.getData().add(series);
+
+        clientGrowthChart.getData().add(series);
     }
 }

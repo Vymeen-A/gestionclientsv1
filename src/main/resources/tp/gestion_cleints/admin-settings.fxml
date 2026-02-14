@@ -2,11 +2,26 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 
 <ScrollPane fitToWidth="true" styleClass="content-pane" stylesheets="@styles.css" xmlns:fx="http://javafx.com/fxml" fx:controller="tp.gestion_cleints.AdminSettingsController">
     <VBox spacing="20" style="-fx-padding: 30;">
         <Label text="%admin.title" styleClass="section-header"/>
+
+        <VBox spacing="15" styleClass="stat-card" style="-fx-padding: 25;">
+            <Label text="%admin.section.branding" styleClass="stat-title" style="-fx-font-size: 18;"/>
+            <HBox spacing="30" alignment="CENTER_LEFT">
+                <StackPane style="-fx-border-color: #ddd; -fx-border-radius: 5; -fx-padding: 10; -fx-background-color: white;">
+                    <ImageView fx:id="logoImageView" fitHeight="120.0" fitWidth="120.0" pickOnBounds="true" preserveRatio="true" />
+                    <Label fx:id="noLogoLabel" text="NO LOGO" style="-fx-text-fill: #aaa; -fx-font-style: italic;" visible="false"/>
+                </StackPane>
+                <VBox spacing="10">
+                    <Label text="%admin.logo_label" styleClass="summary-label-title"/>
+                    <Button text="%admin.btn.change_logo" onAction="#handleChangeLogo" styleClass="button-secondary"/>
+                </VBox>
+            </HBox>
+        </VBox>
         
         <VBox spacing="15" styleClass="stat-card" style="-fx-padding: 25;">
             <Label text="%admin.section.identity" styleClass="stat-title" style="-fx-font-size: 18;"/>

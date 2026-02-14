@@ -41,8 +41,6 @@ public class ClientDetailsController {
     public TableColumn<Transaction, Double> debitColumn;
     @FXML
     public TableColumn<Transaction, Double> creditColumn;
-    @FXML
-    public TableColumn<Transaction, Double> balanceColumn;
 
     private Client currentClient;
     private FinancialDAO financialDAO = new FinancialDAO();
@@ -61,6 +59,17 @@ public class ClientDetailsController {
         dateColumn.setCellValueFactory(new PropertyValueFactory<>("date"));
         notesColumn.setCellValueFactory(new PropertyValueFactory<>("notes"));
         typeColumn.setCellValueFactory(new PropertyValueFactory<>("type"));
+        typeColumn.setCellFactory(tc -> new TableCell<Transaction, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(getLocalizedTypeName(item));
+                }
+            }
+        });
 
         // Setup numeric columns
         debitColumn.setCellFactory(tc -> new TableCell<Transaction, Double>() {
@@ -71,7 +80,9 @@ public class ClientDetailsController {
                 if (empty || t == null) {
                     setText(null);
                 } else if (Transaction.TYPE_CHARGE.equals(t.getType())
-                        || Transaction.TYPE_HONORAIRE_EXTRA.equals(t.getType())) {
+                        || Transaction.TYPE_HONORAIRE_EXTRA.equals(t.getType())
+                        || Transaction.TYPE_PRODUIT.equals(t.getType())
+                        || Transaction.TYPE_SOLDE_ANTERIEUR.equals(t.getType())) {
                     setText(String.format("%.2f", t.getAmount()));
                 } else {
                     setText(null);
@@ -112,20 +123,29 @@ public class ClientDetailsController {
         List<Transaction> transactions = financialDAO.getTransactionsByClient(currentClient.getId());
         transactionTable.setItems(FXCollections.observableArrayList(transactions));
 
-        // Update totals
-        // Use TTC as the base contract amount if available, otherwise fallback to fixed
-        // (HT)
         double baseAmount = currentClient.getTtc() > 0 ? currentClient.getTtc() : currentClient.getFixedTotalAmount();
-        double totalFees = baseAmount
-                + financialDAO.getTotalByClientAndType(currentClient.getId(), Transaction.TYPE_HONORAIRE_EXTRA);
+        double extras = financialDAO.getTotalByClientAndType(currentClient.getId(), Transaction.TYPE_HONORAIRE_EXTRA);
         double charges = financialDAO.getTotalByClientAndType(currentClient.getId(), Transaction.TYPE_CHARGE);
+        double produits = financialDAO.getTotalByClientAndType(currentClient.getId(), Transaction.TYPE_PRODUIT);
+        double soldeAnt = financialDAO.getTotalByClientAndType(currentClient.getId(), Transaction.TYPE_SOLDE_ANTERIEUR);
         double payments = financialDAO.getTotalPaidByClient(currentClient.getId());
 
-        String currency = bundle != null ? bundle.getString("currency") : "MAD";
-        totalFeesLabel.setText(String.format("%.2f %s", totalFees, currency));
-        totalChargesLabel.setText(String.format("%.2f %s", charges, currency));
+        double totalDue = baseAmount + extras + charges + produits + soldeAnt;
+        double balance = totalDue - payments;
+
+        String currency = bundle != null ? bundle.getString("currency") : "DH";
+        totalFeesLabel.setText(String.format("%.2f %s", baseAmount + extras, currency));
+        totalChargesLabel.setText(String.format("%.2f %s", charges + produits, currency));
         totalPaymentsLabel.setText(String.format("%.2f %s", payments, currency));
-        netBalanceLabel.setText(String.format("%.2f %s", (totalFees + charges - payments), currency));
+        netBalanceLabel.setText(String.format("%.2f %s", balance, currency));
+
+        if (balance > 0.01) {
+            netBalanceLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold;"); // Red
+        } else if (balance < -0.01) {
+            netBalanceLabel.setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold;"); // Green
+        } else {
+            netBalanceLabel.setStyle("-fx-text-fill: #2c3e50; -fx-font-weight: bold;"); // Normal
+        }
     }
 
     @FXML
@@ -151,13 +171,30 @@ public class ClientDetailsController {
         grid.setPadding(new Insets(20, 40, 10, 10));
 
         ComboBox<String> typeCombo = new ComboBox<>();
-        typeCombo.getItems().addAll(Transaction.TYPE_PAYMENT, Transaction.TYPE_CHARGE,
-                Transaction.TYPE_HONORAIRE_EXTRA);
+        typeCombo.getItems().addAll(
+                Transaction.TYPE_PAYMENT,
+                Transaction.TYPE_CHARGE,
+                Transaction.TYPE_HONORAIRE_EXTRA,
+                Transaction.TYPE_PRODUIT,
+                Transaction.TYPE_SOLDE_ANTERIEUR);
+
+        // Localize type names in combo
+        typeCombo.setCellFactory(lv -> new ListCell<String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(getLocalizedTypeName(item));
+                }
+            }
+        });
+        typeCombo.setButtonCell(typeCombo.getCellFactory().call(null));
         typeCombo.setValue(Transaction.TYPE_PAYMENT);
 
         ComboBox<PaymentType> paymentTypeCombo = new ComboBox<>();
         paymentTypeCombo.setItems(FXCollections.observableArrayList(paymentTypeDAO.getAllPaymentTypes()));
-        // Select first one by default if available
         if (!paymentTypeCombo.getItems().isEmpty()) {
             paymentTypeCombo.setValue(paymentTypeCombo.getItems().get(0));
         }
@@ -167,15 +204,15 @@ public class ClientDetailsController {
         TextArea notesField = new TextArea();
         notesField.setPrefRowCount(3);
 
-        grid.add(new Label("Type:"), 0, 0);
+        grid.add(new Label(bundle.getString("details.column.type") + ":"), 0, 0);
         grid.add(typeCombo, 1, 0);
         grid.add(new Label(bundle.getString("payment.mode") + ":"), 0, 1);
         grid.add(paymentTypeCombo, 1, 1);
         grid.add(new Label(bundle.getString("details.column.receipt_no") + ":"), 0, 2);
         grid.add(receiptNoField, 1, 2);
-        grid.add(new Label("Amount:"), 0, 3);
+        grid.add(new Label(bundle.getString("details.amount_label") + ":"), 0, 3);
         grid.add(amountField, 1, 3);
-        grid.add(new Label("Notes:"), 0, 4);
+        grid.add(new Label(bundle.getString("details.notes_label") + ":"), 0, 4);
         grid.add(notesField, 1, 4);
 
         dialog.getDialogPane().setContent(grid);
@@ -183,12 +220,22 @@ public class ClientDetailsController {
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == saveButtonType) {
                 try {
-                    double amount = Double.parseDouble(amountField.getText());
+                    String amountStr = amountField.getText().replace(",", ".");
+                    if (amountStr.isEmpty()) {
+                        showAlert(Alert.AlertType.WARNING, bundle.getString("alert.validation_error"),
+                                "Please enter an amount.");
+                        return null;
+                    }
+                    double amount = Double.parseDouble(amountStr);
                     String date = new java.sql.Date(System.currentTimeMillis()).toString();
                     int ptId = paymentTypeCombo.getValue() != null ? paymentTypeCombo.getValue().getId() : 1;
                     return new Transaction(currentClient.getId(), amount, date, notesField.getText(),
                             typeCombo.getValue(), SessionContext.getInstance().getCurrentYear().getId(), ptId,
                             receiptNoField.getText());
+                } catch (NumberFormatException e) {
+                    showAlert(Alert.AlertType.ERROR, bundle.getString("alert.validation_error"),
+                            "Invalid amount format.");
+                    return null;
                 } catch (Exception e) {
                     return null;
                 }
@@ -230,13 +277,28 @@ public class ClientDetailsController {
         grid.setPadding(new Insets(20, 40, 10, 10));
 
         ComboBox<String> typeCombo = new ComboBox<>();
-        typeCombo.getItems().addAll(Transaction.TYPE_PAYMENT, Transaction.TYPE_CHARGE,
-                Transaction.TYPE_HONORAIRE_EXTRA);
+        typeCombo.getItems().addAll(
+                Transaction.TYPE_PAYMENT,
+                Transaction.TYPE_CHARGE,
+                Transaction.TYPE_HONORAIRE_EXTRA,
+                Transaction.TYPE_PRODUIT,
+                Transaction.TYPE_SOLDE_ANTERIEUR);
+        typeCombo.setCellFactory(lv -> new ListCell<String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(getLocalizedTypeName(item));
+                }
+            }
+        });
+        typeCombo.setButtonCell(typeCombo.getCellFactory().call(null));
         typeCombo.setValue(selected.getType());
 
         ComboBox<PaymentType> paymentTypeCombo = new ComboBox<>();
         paymentTypeCombo.setItems(FXCollections.observableArrayList(paymentTypeDAO.getAllPaymentTypes()));
-        // Try to match current payment type
         for (PaymentType pt : paymentTypeCombo.getItems()) {
             if (pt.getId() == selected.getPaymentTypeId()) {
                 paymentTypeCombo.setValue(pt);
@@ -249,15 +311,15 @@ public class ClientDetailsController {
         TextArea notesField = new TextArea(selected.getNotes());
         notesField.setPrefRowCount(3);
 
-        grid.add(new Label("Type:"), 0, 0);
+        grid.add(new Label(bundle.getString("details.column.type") + ":"), 0, 0);
         grid.add(typeCombo, 1, 0);
         grid.add(new Label(bundle.getString("payment.mode") + ":"), 0, 1);
         grid.add(paymentTypeCombo, 1, 1);
         grid.add(new Label(bundle.getString("details.column.receipt_no") + ":"), 0, 2);
         grid.add(receiptNoField, 1, 2);
-        grid.add(new Label("Amount:"), 0, 3);
+        grid.add(new Label(bundle.getString("details.amount_label") + ":"), 0, 3);
         grid.add(amountField, 1, 3);
-        grid.add(new Label("Notes:"), 0, 4);
+        grid.add(new Label(bundle.getString("details.notes_label") + ":"), 0, 4);
         grid.add(notesField, 1, 4);
 
         dialog.getDialogPane().setContent(grid);
@@ -265,7 +327,13 @@ public class ClientDetailsController {
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == saveButtonType) {
                 try {
-                    selected.setAmount(Double.parseDouble(amountField.getText()));
+                    String amountStr = amountField.getText().replace(",", ".");
+                    if (amountStr.isEmpty()) {
+                        showAlert(Alert.AlertType.WARNING, bundle.getString("alert.validation_error"),
+                                "Please enter an amount.");
+                        return null;
+                    }
+                    selected.setAmount(Double.parseDouble(amountStr));
                     selected.setNotes(notesField.getText());
                     selected.setType(typeCombo.getValue());
                     selected.setReceiptNumber(receiptNoField.getText());
@@ -273,6 +341,10 @@ public class ClientDetailsController {
                         selected.setPaymentTypeId(paymentTypeCombo.getValue().getId());
                     }
                     return selected;
+                } catch (NumberFormatException e) {
+                    showAlert(Alert.AlertType.ERROR, bundle.getString("alert.validation_error"),
+                            "Invalid amount format.");
+                    return null;
                 } catch (Exception e) {
                     return null;
                 }
@@ -329,5 +401,33 @@ public class ClientDetailsController {
             financialDAO.deleteTransaction(selected.getId());
             refreshData();
         }
+    }
+
+    private String getLocalizedTypeName(String type) {
+        if (type == null)
+            return "";
+        switch (type) {
+            case Transaction.TYPE_PAYMENT:
+                return bundle.getString("details.type.payment");
+            case Transaction.TYPE_CHARGE:
+                return bundle.getString("details.type.charge");
+            case Transaction.TYPE_HONORAIRE_EXTRA:
+                return bundle.getString("details.type.extra");
+            case Transaction.TYPE_PRODUIT:
+                return bundle.getString("details.type.product");
+            case Transaction.TYPE_SOLDE_ANTERIEUR:
+                return bundle.getString("details.type.previous_balance");
+            default:
+                return type;
+        }
+    }
+
+    private void showAlert(Alert.AlertType alertType, String title, String content) {
+        Alert alert = new Alert(alertType);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.initOwner(clientNameLabel.getScene().getWindow());
+        alert.showAndWait();
     }
 }

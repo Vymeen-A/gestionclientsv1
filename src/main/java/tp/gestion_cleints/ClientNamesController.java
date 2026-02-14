@@ -1,22 +1,21 @@
 package tp.gestion_cleints;
 
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class ClientNamesController {
 
     @FXML
+    private Label headerLabel;
+    @FXML
     private TextField searchField;
     @FXML
-    private ListView<String> clientNamesList;
+    private ListView<Client> clientNamesList;
 
     private ClientDAO clientDAO;
-    private List<Client> allClients;
     private MainController mainController;
 
     public void setMainController(MainController mainController) {
@@ -25,6 +24,49 @@ public class ClientNamesController {
 
     public void initialize() {
         clientDAO = new ClientDAO();
+
+        // Custom cell to show Raison Sociale with a Hide button
+        clientNamesList.setCellFactory(lv -> new javafx.scene.control.ListCell<Client>() {
+            private final javafx.scene.layout.HBox container = new javafx.scene.layout.HBox(10);
+            private final javafx.scene.control.Label nameLabel = new javafx.scene.control.Label();
+            private final javafx.scene.control.Button hideBtn = new javafx.scene.control.Button("Masquer");
+            private final javafx.scene.layout.Region spacer = new javafx.scene.layout.Region();
+
+            {
+                container.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+                javafx.scene.layout.HBox.setHgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
+                hideBtn.getStyleClass().add("button-secondary");
+                hideBtn.setStyle("-fx-font-size: 10px; -fx-padding: 3 8;");
+                container.getChildren().addAll(nameLabel, spacer, hideBtn);
+
+                hideBtn.setOnAction(event -> {
+                    Client client = getItem();
+                    if (client != null) {
+                        clientDAO.setClientVisibility(client.getId(), true);
+                        loadClients(); // Refresh list
+                    }
+                });
+            }
+
+            @Override
+            protected void updateItem(Client item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    nameLabel.setText(
+                            item.getRaisonSociale() + (item.getNomPrenom() != null && !item.getNomPrenom().isEmpty()
+                                    ? " (" + item.getNomPrenom() + ")"
+                                    : ""));
+
+                    nameLabel.setStyle("-fx-text-fill: #2c3e50;");
+
+                    setGraphic(container);
+                }
+            }
+        });
+
         loadClients();
 
         searchField.textProperty().addListener((obs, oldVal, newVal) -> {
@@ -33,38 +75,23 @@ public class ClientNamesController {
 
         clientNamesList.setOnMouseClicked(event -> {
             if (event.getClickCount() == 2) {
-                String selectedName = clientNamesList.getSelectionModel().getSelectedItem();
-                if (selectedName != null) {
-                    Client client = allClients.stream()
-                            .filter(c -> c.getRaisonSociale().equals(selectedName))
-                            .findFirst().orElse(null);
-                    if (client != null && mainController != null) {
-                        mainController.showClientDetails(client);
-                    }
+                Client selected = clientNamesList.getSelectionModel().getSelectedItem();
+                if (selected != null && mainController != null) {
+                    mainController.showClientDetails(selected);
                 }
             }
         });
     }
 
     private void loadClients() {
-        allClients = clientDAO.getAllVisibleClients();
-        updateListView(allClients);
+        clientNamesList.setItems(FXCollections.observableArrayList(clientDAO.getAllVisibleClients()));
     }
 
     private void filterClients(String query) {
         if (query == null || query.isEmpty()) {
-            updateListView(allClients);
+            loadClients();
         } else {
-            List<Client> filtered = allClients.stream()
-                    .filter(c -> c.getRaisonSociale().toLowerCase().contains(query.toLowerCase()))
-                    .collect(Collectors.toList());
-            updateListView(filtered);
+            clientNamesList.setItems(FXCollections.observableArrayList(clientDAO.searchClients(query, false)));
         }
-    }
-
-    private void updateListView(List<Client> clients) {
-        ObservableList<String> names = FXCollections.observableArrayList(
-                clients.stream().map(Client::getRaisonSociale).collect(Collectors.toList()));
-        clientNamesList.setItems(names);
     }
 }

@@ -40,7 +40,7 @@ public class ProfileController {
         if (currentUser != null) {
             usernameField.setText(currentUser.getUsername());
             fullNameField.setText(currentUser.getFullName());
-            roleField.setText(currentUser.getRole().name());
+            roleField.setText(bundle.getString("role." + currentUser.getRole().name().toLowerCase()));
             emailField.setText(currentUser.getEmail());
             phoneField.setText(currentUser.getPhone());
 
@@ -95,6 +95,13 @@ public class ProfileController {
             showAlert(bundle.getString("alert.success"), bundle.getString("admin.save_success"));
         } else {
             showAlert(bundle.getString("alert.error"), bundle.getString("alert.db_save_failed"));
+        }
+    }
+
+    @FXML
+    private void handleShowSecurity() {
+        if (mainController != null) {
+            mainController.showSecurity();
         }
     }
 

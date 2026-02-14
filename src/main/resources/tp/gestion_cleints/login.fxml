@@ -3,55 +3,75 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.image.*?>
 
 <VBox xmlns:fx="http://javafx.com/fxml" 
       fx:controller="tp.gestion_cleints.LoginController" 
       alignment="CENTER" spacing="0" 
       styleClass="root"
-      prefWidth="500" prefHeight="450"
+      prefWidth="550" prefHeight="600"
       stylesheets="@styles.css">
     
-    <HBox alignment="CENTER_RIGHT" spacing="10" style="-fx-padding: 10;">
+    <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-padding: 5;">
+        <HBox alignment="CENTER_LEFT" spacing="8" HBox.hgrow="ALWAYS">
+            <ImageView fitHeight="20" fitWidth="20" preserveRatio="true">
+                <image>
+                    <Image url="@images/logo1.png"/>
+                </image>
+            </ImageView>
+            <Label text="Gestion Clients" style="-fx-text-fill: #7f8c8d; -fx-font-size: 12px; -fx-font-weight: bold;"/>
+        </HBox>
         <Button text="—" onAction="#handleMinimize" styleClass="window-control-button"/>
         <Button text="✕" onAction="#handleExit" styleClass="window-control-button" style="-fx-text-fill: #e74c3c;"/>
     </HBox>
     
     <Region VBox.vgrow="ALWAYS" />
     
-    <VBox spacing="30" alignment="CENTER" styleClass="stat-card" maxWidth="400" style="-fx-padding: 40;">
-        <VBox spacing="10" alignment="CENTER">
-            <Label text="%login.title" styleClass="section-header" style="-fx-padding: 0;"/>
-            <Label text="%login.header" styleClass="stat-title"/>
-        </VBox>
-        
-        <VBox spacing="15" alignment="CENTER_LEFT">
-            <VBox spacing="5" fx:id="userSelectionBox">
-                <Label text="%user.username" styleClass="summary-label-title"/>
-                <ComboBox fx:id="userComboBox" maxWidth="Infinity" styleClass="text-field" promptText="%user.select_user"/>
-            </VBox>
-
-            <VBox spacing="5">
-                <Label text="%login.password" styleClass="summary-label-title"/>
-                <HBox spacing="0" alignment="CENTER_LEFT" styleClass="password-container">
-                    <StackPane HBox.hgrow="ALWAYS">
-                        <PasswordField fx:id="passwordField" promptText="%login.password_prompt" onAction="#handleLogin" styleClass="password-input-field"/>
-                        <TextField fx:id="passwordTextField" promptText="%login.password_prompt" onAction="#handleLogin" visible="false" managed="false" styleClass="password-input-field"/>
-                    </StackPane>
-                    <Button fx:id="togglePasswordButton" onAction="#togglePasswordVisibility" styleClass="eye-button" text="👁"/>
-                </HBox>
-            </VBox>
-
-            <VBox spacing="5">
-                <Label text="%nav.years" styleClass="summary-label-title"/>
-                <ComboBox fx:id="yearComboBox" maxWidth="120" prefHeight="25" styleClass="text-field" promptText="%nav.select_year" style="-fx-font-size: 13px; -fx-background-radius: 3; -fx-border-radius: 3; -fx-padding: 0 5; -fx-font-weight: bold;"/>
-            </VBox>
-        </VBox>
-        
-        <Button text="%login.btn_login" onAction="#handleLogin" styleClass="button-primary" maxWidth="Infinity"/>
-        <Button text="%login.btn_change" onAction="#handleChangePassword" styleClass="button-secondary" maxWidth="Infinity"/>
-        <Button text="%login.btn_reset" onAction="#handleResetPassword" styleClass="button-secondary" maxWidth="Infinity"/>
-        
-        <Label fx:id="errorLabel" text="" style="-fx-text-fill: #e74c3c; -fx-font-weight: bold;"/>
+    <VBox spacing="10" alignment="CENTER" style="-fx-padding: 0 0 20 0;">
+        <Label text="%login.title" styleClass="section-header" style="-fx-padding: 0;"/>
+        <Label text="%login.header" styleClass="stat-title"/>
     </VBox>
+
+    <StackPane>
+        <VBox fx:id="loginCard" spacing="30" alignment="CENTER" styleClass="stat-card" maxWidth="450" style="-fx-padding: 40;">
+            <VBox spacing="15" alignment="CENTER_LEFT">
+                <VBox spacing="5" fx:id="userSelectionBox">
+                    <Label text="%user.username" styleClass="summary-label-title"/>
+                    <ComboBox fx:id="userComboBox" maxWidth="Infinity" styleClass="combo-box-styled" promptText="%user.select_user"/>
+                </VBox>
+
+                <VBox spacing="5">
+                    <Label text="%login.password" styleClass="summary-label-title"/>
+                    <HBox spacing="0" alignment="CENTER_LEFT" styleClass="password-container">
+                        <StackPane HBox.hgrow="ALWAYS">
+                            <PasswordField fx:id="passwordField" promptText="%login.password_prompt" onAction="#handleLogin" styleClass="password-input-field"/>
+                            <TextField fx:id="passwordTextField" promptText="%login.password_prompt" onAction="#handleLogin" visible="false" managed="false" styleClass="password-input-field"/>
+                        </StackPane>
+                        <Button fx:id="togglePasswordButton" onAction="#togglePasswordVisibility" styleClass="eye-button" text="👁"/>
+                    </HBox>
+                </VBox>
+
+                <VBox spacing="5">
+                    <Label text="%nav.years" styleClass="summary-label-title"/>
+                    <ComboBox fx:id="yearComboBox" maxWidth="Infinity" styleClass="combo-box-styled" promptText="%nav.select_year"/>
+                </VBox>
+            </VBox>
+            
+            <Button fx:id="loginButton" text="%login.btn_login" onAction="#handleLogin" styleClass="button-primary" maxWidth="Infinity"/>
+            
+            <HBox spacing="10" alignment="CENTER">
+                <Button fx:id="changePasswordButton" text="%login.btn_change" onAction="#handleChangePassword" styleClass="button-secondary" maxWidth="Infinity" HBox.hgrow="ALWAYS" style="-fx-font-size: 11px;"/>
+                <Button fx:id="resetPasswordButton" text="%login.btn_reset" onAction="#handleResetPassword" styleClass="button-secondary" maxWidth="Infinity" HBox.hgrow="ALWAYS" style="-fx-font-size: 11px;"/>
+            </HBox>
+            
+            <Label fx:id="errorLabel" text="" style="-fx-text-fill: #e74c3c; -fx-font-weight: bold;" wrapText="true" alignment="CENTER"/>
+        </VBox>
+
+        <VBox fx:id="loadingOverlay" alignment="CENTER" style="-fx-background-color: rgba(255,255,255,0.7); -fx-background-radius: 15;" visible="false">
+            <ProgressIndicator maxWidth="50" maxHeight="50"/>
+            <Label text="..." style="-fx-margin-top: 10;"/>
+        </VBox>
+    </StackPane>
+    
     <Region VBox.vgrow="ALWAYS" />
 </VBox>

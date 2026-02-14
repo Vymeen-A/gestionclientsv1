@@ -71,8 +71,24 @@ public class YearManagementController {
         dialog.setHeaderText(resources.getString("year.prompt_header"));
         Optional<String> result = dialog.showAndWait();
         result.ifPresent(name -> {
-            Year year = new Year(0, name);
-            yearDAO.addYear(year);
+            String trimmedName = name.trim();
+            if (trimmedName.isEmpty()) {
+                showAlert(Alert.AlertType.WARNING, resources.getString("alert.validation_error"),
+                        resources.getString("year.error_empty"));
+                return;
+            }
+
+            // Check duplicate
+            boolean exists = yearDAO.getAllYearsIncludingDeleted().stream()
+                    .anyMatch(y -> y.getName().equalsIgnoreCase(trimmedName));
+            if (exists) {
+                showAlert(Alert.AlertType.WARNING, resources.getString("alert.validation_error"),
+                        resources.getString("year.error_duplicate"));
+                return;
+            }
+
+            Year year = new Year(0, trimmedName);
+            yearDAO.addYear(year, resources.getString("year.carry_over_note"));
             loadYears();
             if (mainController != null) {
                 mainController.refreshYearMenu();
@@ -110,40 +126,61 @@ public class YearManagementController {
     @FXML
     private void handleDeleteYear() {
         Year selected = yearTable.getSelectionModel().getSelectedItem();
-        if (selected != null) {
-            // Generate 3-digit code
-            int code = (int) (Math.random() * 900) + 100;
+        if (selected == null)
+            return;
 
-            TextInputDialog dialog = new TextInputDialog();
-            dialog.initOwner(yearTable.getScene().getWindow());
-            dialog.setTitle(resources.getString("details.confirm_delete"));
-            dialog.setHeaderText("Confirmation de sécuritée");
-            dialog.setContentText("Pour supprimer l'année [" + selected.getName()
-                    + "], veuillez saisir le code suivant : " + code);
-
-            // Set icon
-            try {
-                javafx.stage.Stage stage = (javafx.stage.Stage) dialog.getDialogPane().getScene().getWindow();
-                stage.getIcons().add(new javafx.scene.image.Image(
-                        getClass().getResourceAsStream("images/logo.png")));
-            } catch (Exception e) {
-            }
-
-            Optional<String> result = dialog.showAndWait();
-            if (result.isPresent() && result.get().equals(String.valueOf(code))) {
-                yearDAO.softDeleteYear(selected.getId());
-                loadYears();
-                if (mainController != null) {
-                    mainController.refreshYearMenu();
-                }
-            } else if (result.isPresent()) {
-                Alert error = new Alert(Alert.AlertType.ERROR);
-                error.setTitle("Erreur");
-                error.setHeaderText("Code incorrect");
-                error.setContentText("Le code saisi ne correspond pas. La suppression a été annulée.");
-                error.showAndWait();
-            }
+        // Prevent deleting active year
+        Year activeYear = SessionContext.getInstance().getCurrentYear();
+        if (activeYear != null && activeYear.getId() == selected.getId()) {
+            showAlert(Alert.AlertType.ERROR, resources.getString("alert.db_error"),
+                    resources.getString("year.active_delete_warning"));
+            return;
         }
+
+        // Generate 3-digit code
+        int code = (int) (Math.random() * 900) + 100;
+
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.initOwner(yearTable.getScene().getWindow());
+        dialog.setTitle(resources.getString("details.confirm_delete"));
+        dialog.setHeaderText(resources.getString("year.delete_code_header"));
+
+        String prompt = java.text.MessageFormat.format(resources.getString("year.delete_code_prompt"),
+                selected.getName(), code);
+        dialog.setContentText(prompt);
+
+        // Set icon
+        try {
+            javafx.stage.Stage stage = (javafx.stage.Stage) dialog.getDialogPane().getScene().getWindow();
+            stage.getIcons().add(new javafx.scene.image.Image(getClass().getResourceAsStream("images/logo.png")));
+        } catch (Exception e) {
+        }
+
+        Optional<String> result = dialog.showAndWait();
+        if (result.isPresent() && result.get().equals(String.valueOf(code))) {
+            yearDAO.softDeleteYear(selected.getId());
+            loadYears();
+            if (mainController != null) {
+                mainController.refreshYearMenu();
+            }
+        } else if (result.isPresent()) {
+            showAlert(Alert.AlertType.ERROR, resources.getString("alert.db_error"),
+                    resources.getString("year.error_code_mismatch"));
+        }
+    }
+
+    private void showAlert(Alert.AlertType type, String title, String content) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.initOwner(yearTable.getScene().getWindow());
+        try {
+            javafx.stage.Stage stage = (javafx.stage.Stage) alert.getDialogPane().getScene().getWindow();
+            stage.getIcons().add(new javafx.scene.image.Image(getClass().getResourceAsStream("images/logo.png")));
+        } catch (Exception e) {
+        }
+        alert.showAndWait();
     }
 
     @FXML

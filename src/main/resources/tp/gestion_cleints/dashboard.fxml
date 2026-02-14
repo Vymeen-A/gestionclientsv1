@@ -3,6 +3,10 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.chart.*?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.layout.FlowPane?>
 
 <ScrollPane xmlns="http://javafx.com/javafx/8.0.171" 
             xmlns:fx="http://javafx.com/fxml/1" 
@@ -13,37 +17,37 @@
     <VBox styleClass="content-area" spacing="30">
         <Label text="%dashboard.title" styleClass="section-header"/>
         
-        <HBox spacing="30">
-            <VBox styleClass="stat-card" minWidth="200" HBox.hgrow="ALWAYS">
+        <HBox spacing="20">
+            <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
                 <Label text="%stats.total_clients" styleClass="stat-title"/>
                 <Label fx:id="totalClientsLabel" text="0" styleClass="stat-value"/>
             </VBox>
             
-            <VBox styleClass="stat-card" minWidth="200" HBox.hgrow="ALWAYS">
+            <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
                 <Label text="%stats.total_revenue" styleClass="stat-title"/>
-                <Label fx:id="totalRevenueLabel" text="0.00 MAD" styleClass="stat-value"/>
+                <Label fx:id="totalRevenueLabel" text="0.00 DH" styleClass="stat-value"/>
             </VBox>
             
-            <VBox styleClass="stat-card" minWidth="200" HBox.hgrow="ALWAYS">
-                <Label text="%stats.avg_revenue" styleClass="stat-title"/>
-                <Label fx:id="avgRevenueLabel" text="0.00 MAD" styleClass="stat-value"/>
+            <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+                <Label text="%stats.total_paid" styleClass="stat-title" style="-fx-text-fill: #27ae60;"/>
+                <Label fx:id="totalPaidLabel" text="0.00 DH" styleClass="stat-value" style="-fx-text-fill: #27ae60;"/>
             </VBox>
             
-            <VBox styleClass="stat-card" minWidth="200" HBox.hgrow="ALWAYS">
-                <Label text="%stats.top_client" styleClass="stat-title"/>
-                <Label fx:id="topClientLabel" text="-" styleClass="stat-value" style="-fx-font-size: 20px;"/>
+            <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+                <Label text="%stats.total_unpaid" styleClass="stat-title" style="-fx-text-fill: #e74c3c;"/>
+                <Label fx:id="totalDueLabel" text="0.00 DH" styleClass="stat-value" style="-fx-text-fill: #e74c3c;"/>
             </VBox>
         </HBox>
 
         <HBox spacing="30">
             <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
-                <Label text="%chart.revenue" styleClass="stat-title"/>
-                <BarChart fx:id="revenueChart" prefHeight="300">
+                <Label text="%chart.client_growth_title" styleClass="stat-title"/>
+                <BarChart fx:id="clientGrowthChart" legendVisible="false" animated="false">
                     <xAxis>
-                        <CategoryAxis label="%form.name"/>
+                        <CategoryAxis label="%chart.axis.month" fx:id="xAxis"/>
                     </xAxis>
                     <yAxis>
-                        <NumberAxis label="%form.revenue"/>
+                        <NumberAxis label="%chart.axis.new_clients" fx:id="yAxis" tickUnit="1"/>
                     </yAxis>
                 </BarChart>
             </VBox>

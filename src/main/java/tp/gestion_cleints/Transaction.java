@@ -17,6 +17,7 @@ public class Transaction {
     public static final String TYPE_HONORAIRE_CONTRACT = "HONORAIRE_CONTRACT";
     public static final String TYPE_HONORAIRE_EXTRA = "HONORAIRE_EXTRA";
     public static final String TYPE_PRODUIT = "PRODUIT";
+    public static final String TYPE_SOLDE_ANTERIEUR = "SOLDE_ANTERIEUR";
 
     public Transaction(int id, int clientId, double amount, String date, String notes, String type, int yearId,
             int paymentTypeId, String receiptNumber) {

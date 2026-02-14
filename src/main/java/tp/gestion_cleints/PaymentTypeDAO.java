@@ -52,4 +52,19 @@ public class PaymentTypeDAO {
             return false;
         }
     }
+
+    public boolean isPaymentTypeUsed(int id) {
+        String sql = "SELECT COUNT(*) FROM transactions WHERE payment_type_id = ?";
+        try (Connection conn = getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next())
+                    return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 }

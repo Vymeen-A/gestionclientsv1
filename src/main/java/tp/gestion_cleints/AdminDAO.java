@@ -23,6 +23,7 @@ public class AdminDAO {
                 info.setRegimeTva(rs.getString("regime_tva"));
                 info.setEmail(rs.getString("email"));
                 info.setPhone(rs.getString("phone"));
+                info.setLogoPath(rs.getString("logo_path"));
                 return info;
             }
         } catch (SQLException e) {
@@ -31,9 +32,10 @@ public class AdminDAO {
         return new AdminInfo();
     }
 
-    public void updateAdminInfo(AdminInfo info) {
-        String sql = "UPDATE admin_info SET raison_sociale = ?, nom_prenom = ?, adresse = ?, ville = ?, " +
-                "ice = ?, rc = ?, tp = ?, identifiant_tva = ?, regime_tva = ?, email = ?, phone = ? WHERE id = 1";
+    public boolean updateAdminInfo(AdminInfo info) {
+        String sql = "INSERT OR REPLACE INTO admin_info (id, raison_sociale, nom_prenom, adresse, ville, " +
+                "ice, rc, tp, identifiant_tva, regime_tva, email, phone, logo_path) " +
+                "VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DatabaseManager.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -49,10 +51,15 @@ public class AdminDAO {
             pstmt.setString(9, info.getRegimeTva());
             pstmt.setString(10, info.getEmail());
             pstmt.setString(11, info.getPhone());
+            pstmt.setString(12, info.getLogoPath());
 
-            pstmt.executeUpdate();
+            int affectedRows = pstmt.executeUpdate();
+            System.out.println("Admin Info saved/updated: " + affectedRows + " row(s) affected.");
+            return true;
         } catch (SQLException e) {
+            System.err.println("Error updating admin info: " + e.getMessage());
             e.printStackTrace();
+            return false;
         }
     }
 }

@@ -7,6 +7,10 @@ public class User {
     private String email;
     private String phone;
     private String profilePhoto;
+    private boolean active = true;
+    private String lastLogin;
+    private int failedAttempts;
+    private String lockoutUntil;
 
     public User(String username, Role role) {
         this.username = username;
@@ -20,6 +24,15 @@ public class User {
         this.email = email;
         this.phone = phone;
         this.profilePhoto = profilePhoto;
+    }
+
+    public User(String username, Role role, String fullName, String email, String phone, String profilePhoto,
+            boolean active, String lastLogin, int failedAttempts, String lockoutUntil) {
+        this(username, role, fullName, email, phone, profilePhoto);
+        this.active = active;
+        this.lastLogin = lastLogin;
+        this.failedAttempts = failedAttempts;
+        this.lockoutUntil = lockoutUntil;
     }
 
     public String getUsername() {
@@ -80,5 +93,48 @@ public class User {
 
     public boolean isReadOnly() {
         return role == Role.READ_ONLY;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    public String getLastLogin() {
+        return lastLogin;
+    }
+
+    public void setLastLogin(String lastLogin) {
+        this.lastLogin = lastLogin;
+    }
+
+    public int getFailedAttempts() {
+        return failedAttempts;
+    }
+
+    public void setFailedAttempts(int failedAttempts) {
+        this.failedAttempts = failedAttempts;
+    }
+
+    public String getLockoutUntil() {
+        return lockoutUntil;
+    }
+
+    public void setLockoutUntil(String lockoutUntil) {
+        this.lockoutUntil = lockoutUntil;
+    }
+
+    public boolean isLocked() {
+        if (lockoutUntil == null)
+            return false;
+        try {
+            java.time.LocalDateTime until = java.time.LocalDateTime.parse(lockoutUntil);
+            return until.isAfter(java.time.LocalDateTime.now());
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

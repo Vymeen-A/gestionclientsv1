@@ -5,6 +5,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import java.util.ResourceBundle;
 import java.util.Locale;
@@ -23,6 +24,14 @@ public class LoginController {
     private ComboBox<Year> yearComboBox;
     @FXML
     private ComboBox<User> userComboBox;
+    @FXML
+    private VBox loadingOverlay;
+    @FXML
+    private Button loginButton;
+    @FXML
+    private Button changePasswordButton;
+    @FXML
+    private Button resetPasswordButton;
 
     private UserDAO userDAO = new UserDAO();
     private YearDAO yearDAO = new YearDAO();
@@ -68,6 +77,8 @@ public class LoginController {
     @FXML
     private void togglePasswordVisibility() {
         if (passwordField.isVisible()) {
+            // Copy password to text field before switching
+            passwordTextField.setText(passwordField.getText());
             passwordField.setVisible(false);
             passwordField.setManaged(false);
             passwordTextField.setVisible(true);
@@ -75,6 +86,8 @@ public class LoginController {
             togglePasswordButton.setText("🔒");
             passwordTextField.requestFocus();
         } else {
+            // Copy password back to password field before switching
+            passwordField.setText(passwordTextField.getText());
             passwordField.setVisible(true);
             passwordField.setManaged(true);
             passwordTextField.setVisible(false);
@@ -86,21 +99,59 @@ public class LoginController {
 
     @FXML
     private void handleResetPassword() {
+        User selectedUser = userComboBox.getValue();
+        if (selectedUser == null) {
+            errorLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold;");
+            errorLabel.setText(bundle.getString("login.select_user_error"));
+            return;
+        }
+
+        // Clear existing messages when starting reset
+        errorLabel.setText("");
+
+        if (!"admin".equals(selectedUser.getUsername())) {
+            errorLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold;");
+            errorLabel.setText(bundle.getString("login.admin_only_reset"));
+            return;
+        }
+
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.initOwner(passwordField.getScene().getWindow());
         alert.setTitle(bundle.getString("login.btn_reset"));
         alert.setHeaderText(bundle.getString("login.btn_reset"));
-        alert.setContentText(bundle.getString("alert.delete_content").replace("{0}", "password"));
+        alert.setContentText(
+                bundle.getString("alert.delete_content").replace("{0}", selectedUser.getUsername() + " password"));
 
-        if (alert.showAndWait().get() == ButtonType.OK) {
-            userDAO.updatePassword("admin", "admin");
-            errorLabel.setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold;");
-            errorLabel.setText(bundle.getString("login.success_reset"));
-        }
+        alert.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                try {
+                    userDAO.resetPassword(selectedUser.getUsername(), selectedUser.getUsername());
+                    errorLabel.setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold;");
+                    errorLabel.setText(bundle.getString("login.success_reset"));
+                    passwordField.clear();
+                    passwordTextField.clear();
+                } catch (Exception e) {
+                    errorLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold;");
+                    errorLabel.setText("Error: " + e.getMessage());
+                }
+            }
+        });
     }
 
     @FXML
     private void handleChangePassword() {
-        String password = passwordField.getText();
+        // Clear existing messages
+        errorLabel.setText("");
+
+        User selectedUser = userComboBox.getValue();
+        if (selectedUser == null) {
+            errorLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold;");
+            errorLabel.setText(bundle.getString("login.select_user_error"));
+            return;
+        }
+
+        // Read from whichever field is currently visible
+        String password = passwordField.isVisible() ? passwordField.getText() : passwordTextField.getText();
 
         if (password.isEmpty()) {
             errorLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold;");
@@ -108,15 +159,15 @@ public class LoginController {
             return;
         }
 
-        if (userDAO.authenticate("admin", password)) {
-            showChangePasswordDialog(password);
+        if (userDAO.authenticate(selectedUser.getUsername(), password)) {
+            showChangePasswordDialog(selectedUser.getUsername(), password);
         } else {
             errorLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold;");
             errorLabel.setText(bundle.getString("login.error"));
         }
     }
 
-    private void showChangePasswordDialog(String currentPassword) {
+    private void showChangePasswordDialog(String username, String currentPassword) {
         Dialog<Void> dialog = new Dialog<>();
         dialog.setTitle(bundle.getString("login.btn_change"));
         dialog.initOwner(passwordField.getScene().getWindow());
@@ -125,11 +176,18 @@ public class LoginController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("change-password.fxml"), bundle);
             Parent root = loader.load();
             ChangePasswordController controller = loader.getController();
+            controller.setUser(username);
             controller.currentPasswordField.setText(currentPassword);
-            controller.currentPasswordField.setEditable(false); // Locked to verified password
+            controller.currentPasswordField.setEditable(false);
 
-            dialog.getDialogPane().setContent(root);
-            dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+            DialogPane dialogPane = dialog.getDialogPane();
+            dialogPane.setContent(root);
+            dialogPane.getButtonTypes().add(ButtonType.CLOSE);
+
+            // Style the close button
+            Button closeButton = (Button) dialogPane.lookupButton(ButtonType.CLOSE);
+            closeButton.getStyleClass().add("button-secondary");
+
             dialog.showAndWait();
         } catch (Exception e) {
             e.printStackTrace();
@@ -159,7 +217,8 @@ public class LoginController {
 
     @FXML
     private void handleLogin() {
-        String password = passwordField.getText();
+        // Read from whichever field is currently visible
+        String password = passwordField.isVisible() ? passwordField.getText() : passwordTextField.getText();
         Year selectedYear = yearComboBox.getValue();
         User selectedUser = userComboBox.getValue();
 
@@ -171,15 +230,70 @@ public class LoginController {
 
         if (selectedUser == null) {
             errorLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold;");
-            errorLabel.setText("Please select a user");
+            errorLabel.setText(bundle.getString("login.select_user_error"));
             return;
         }
 
-        if (userDAO.authenticate(selectedUser.getUsername(), password)) {
-            SessionContext.getInstance().setCurrentYear(selectedYear);
-            loadMainApp();
+        // Show loading and disable UI
+        setLoadingState(true);
+        errorLabel.setText("");
+
+        javafx.concurrent.Task<Boolean> authTask = new javafx.concurrent.Task<>() {
+            @Override
+            protected Boolean call() throws Exception {
+                // Background thread
+                return userDAO.authenticate(selectedUser.getUsername(), password);
+            }
+        };
+
+        authTask.setOnSucceeded(e -> {
+            setLoadingState(false);
+            if (authTask.getValue()) {
+                SessionContext.getInstance().setCurrentYear(selectedYear);
+                loadMainApp();
+            } else {
+                showAuthError(selectedUser.getUsername());
+            }
+        });
+
+        authTask.setOnFailed(e -> {
+            setLoadingState(false);
+            errorLabel.setText(bundle.getString("alert.system_error"));
+            authTask.getException().printStackTrace();
+        });
+
+        new Thread(authTask).start();
+    }
+
+    private void setLoadingState(boolean loading) {
+        loadingOverlay.setVisible(loading);
+        loginButton.setDisable(loading);
+        changePasswordButton.setDisable(loading);
+        resetPasswordButton.setDisable(loading);
+        passwordField.setDisable(loading);
+        passwordTextField.setDisable(loading);
+        userComboBox.setDisable(loading);
+        yearComboBox.setDisable(loading);
+    }
+
+    private void showAuthError(String username) {
+        errorLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold;");
+
+        // Check if user is locked or inactive to give better feedback
+        // Note: getAllUsers() might also be slow, but it's okay here for error feedback
+        User user = userDAO.getAllUsers().stream()
+                .filter(u -> u.getUsername().equals(username))
+                .findFirst().orElse(null);
+
+        if (user != null) {
+            if (!user.isActive()) {
+                errorLabel.setText(bundle.getString("login.account_deactivated"));
+            } else if (user.isLocked()) {
+                errorLabel.setText(bundle.getString("login.account_locked"));
+            } else {
+                errorLabel.setText(bundle.getString("login.error"));
+            }
         } else {
-            errorLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold;");
             errorLabel.setText(bundle.getString("login.error"));
         }
     }
@@ -197,19 +311,13 @@ public class LoginController {
             stage.setResizable(true);
 
             // Maintain window icon
-            try {
-                stage.getIcons().clear();
-                stage.getIcons().add(new javafx.scene.image.Image(
-                        getClass().getResourceAsStream("images/logo.png")));
-            } catch (Exception e) {
-                System.err.println("Could not maintain main icon: " + e.getMessage());
-            }
+            UIUtils.setStageIcon(stage);
 
             stage.show();
         } catch (Exception e) {
             System.err.println("Error loading main app: " + e.getMessage());
             e.printStackTrace();
-            errorLabel.setText("System error: Could not load application.");
+            errorLabel.setText(bundle.getString("alert.system_error"));
         }
     }
 

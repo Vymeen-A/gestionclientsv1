@@ -11,24 +11,24 @@
     
     <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
 
-    <Label text="Restore Wizard" styleClass="section-header"/>
-    <Label text="Selected Backup Source:" styleClass="label-bold"/>
+    <Label text="%restore.wizard" styleClass="section-header"/>
+    <Label text="%restore.selected_source" styleClass="label-bold"/>
     <Label fx:id="fileNameLabel" text="..." wrapText="true"/>
     
     <Separator/>
     
-    <Label text="Data Preview (Estimated):" styleClass="label-bold"/>
+    <Label text="%restore.preview" styleClass="label-bold"/>
     <GridPane vgap="5" hgap="10">
-        <Label text="File Size:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+        <Label text="%restore.file_size" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
         <Label fx:id="sizeLabel" text="0 KB" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
         
-        <Label text="Warning:" textFill="RED" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-        <Label text="This will overwrite your current database!" 
+        <Label text="%restore.warning" textFill="RED" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+        <Label text="%restore.warning_message" 
                textFill="RED" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
     </GridPane>
 
     <HBox spacing="10" alignment="CENTER_RIGHT">
-        <Button text="Cancel" onAction="#handleCancel" styleClass="button-secondary"/>
-        <Button text="Proceed Restore" onAction="#handleRestore" styleClass="button-danger"/>
+        <Button text="%btn.cancel" onAction="#handleCancel" styleClass="button-secondary"/>
+        <Button text="%btn.proceed_restore" onAction="#handleRestore" styleClass="button-danger"/>
     </HBox>
 </VBox>

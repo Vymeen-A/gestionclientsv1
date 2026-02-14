@@ -8,10 +8,8 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.Region;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import java.io.IOException;
 import java.util.ResourceBundle;
 import java.text.MessageFormat;
 
@@ -22,21 +20,17 @@ public class ClientListController {
     @FXML
     private TableView<Client> clientTable;
     @FXML
-    private TableColumn<Client, String> statusColumn;
-    @FXML
-    private TableColumn<Client, Integer> idColumn;
-    @FXML
-    private TableColumn<Client, String> raisonSocialeColumn;
-    @FXML
     private TableColumn<Client, String> nomPrenomColumn;
     @FXML
-    private TableColumn<Client, String> villeColumn;
+    private TableColumn<Client, Double> honorairesColumn;
     @FXML
-    private TableColumn<Client, Double> fixedAmountColumn;
+    private TableColumn<Client, Double> autresColumn;
     @FXML
-    private TableColumn<Client, Double> ttcColumn;
+    private TableColumn<Client, Double> totalHonEtTtColumn;
     @FXML
-    private TableColumn<Client, Void> actionsColumn;
+    private TableColumn<Client, Double> totalDesAvanceColumn;
+    @FXML
+    private TableColumn<Client, Double> resteColumn;
 
     private ClientDAO clientDAO;
     private ObservableList<Client> clientList;
@@ -52,6 +46,7 @@ public class ClientListController {
         bundle = ResourceBundle.getBundle("tp.gestion_cleints.messages", java.util.Locale.getDefault());
         setupColumns();
         loadClients();
+        UIUtils.applyFastScroll(clientTable);
 
         // Real-time search
         searchField.textProperty().addListener((obs, oldVal, newVal) -> {
@@ -72,87 +67,40 @@ public class ClientListController {
     }
 
     private void setupColumns() {
-        statusColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
-        statusColumn.setCellFactory(tc -> new StatusCell());
-        idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
-        raisonSocialeColumn.setCellValueFactory(new PropertyValueFactory<>("raisonSociale"));
         nomPrenomColumn.setCellValueFactory(new PropertyValueFactory<>("nomPrenom"));
-        villeColumn.setCellValueFactory(new PropertyValueFactory<>("ville"));
-        fixedAmountColumn.setCellValueFactory(new PropertyValueFactory<>("fixedTotalAmount"));
-        ttcColumn.setCellValueFactory(new PropertyValueFactory<>("ttc"));
+        honorairesColumn.setCellValueFactory(new PropertyValueFactory<>("honoraires"));
+        autresColumn.setCellValueFactory(new PropertyValueFactory<>("autres"));
+        totalHonEtTtColumn.setCellValueFactory(new PropertyValueFactory<>("totalHonEtTt"));
+        totalDesAvanceColumn.setCellValueFactory(new PropertyValueFactory<>("totalAvance"));
+        resteColumn.setCellValueFactory(new PropertyValueFactory<>("reste"));
 
-        String currency = bundle != null ? bundle.getString("currency") : "MAD";
-        fixedAmountColumn.setCellFactory(tc -> new CurrencyCell(currency));
-        ttcColumn.setCellFactory(tc -> new CurrencyCell(currency));
+        String currency = bundle != null ? bundle.getString("currency") : "DH";
 
-        actionsColumn.setCellFactory(param -> new TableCell<>() {
-            private final Button hideBtn = new Button(bundle.getString("btn.hide"));
+        honorairesColumn.setCellFactory(tc -> new CurrencyCell(currency));
+        autresColumn.setCellFactory(tc -> new CurrencyCell(currency));
+        totalHonEtTtColumn.setCellFactory(tc -> new CurrencyCell(currency));
+        totalDesAvanceColumn.setCellFactory(tc -> new CurrencyCell(currency));
 
-            {
-                hideBtn.getStyleClass().addAll("button-secondary", "hide-badge-button");
-                hideBtn.setTooltip(new Tooltip(bundle.getString("btn.hide")));
-                hideBtn.setOnAction(event -> {
-                    Client client = getTableView().getItems().get(getIndex());
-                    clientDAO.setClientVisibility(client.getId(), true);
-                    loadClients();
-                });
-            }
-
+        // Custom cell for Reste to match the logic (red if > 0)
+        resteColumn.setCellFactory(tc -> new TableCell<Client, Double>() {
             @Override
-            protected void updateItem(Void item, boolean empty) {
+            protected void updateItem(Double item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty) {
-                    setGraphic(null);
+                if (empty || item == null) {
+                    setText(null);
+                    setStyle("");
                 } else {
-                    setGraphic(hideBtn);
+                    setText(String.format("%.2f %s", item, currency));
+                    if (item > 0.01) { // Tolerate small floating point diffs
+                        setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold;");
+                    } else if (item < -0.01) {
+                        setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold;");
+                    } else {
+                        setStyle("-fx-text-fill: #2c3e50;");
+                    }
                 }
             }
         });
-    }
-
-    private class StatusCell extends TableCell<Client, String> {
-        private final Region circle = new Region();
-
-        public StatusCell() {
-            circle.getStyleClass().add("status-circle");
-        }
-
-        @Override
-        protected void updateItem(String item, boolean empty) {
-            super.updateItem(item, empty);
-            if (empty || item == null) {
-                setGraphic(null);
-                setTooltip(null);
-            } else {
-                circle.getStyleClass().removeAll("status-good", "status-late", "status-risky", "status-danger",
-                        "status-inactive");
-                String tooltipText = "";
-                switch (item) {
-                    case "GOOD":
-                        circle.getStyleClass().add("status-good");
-                        tooltipText = "Situation Régulière";
-                        break;
-                    case "LATE":
-                        circle.getStyleClass().add("status-late");
-                        tooltipText = "Paiement en retard (>30j)";
-                        break;
-                    case "RISKY":
-                        circle.getStyleClass().add("status-risky");
-                        tooltipText = "Client à Risque (>90j)";
-                        break;
-                    case "INACTIVE":
-                        circle.getStyleClass().add("status-inactive");
-                        tooltipText = "Inactif";
-                        break;
-                    default:
-                        circle.getStyleClass().add("status-inactive");
-                        tooltipText = "Inconnu";
-                        break;
-                }
-                setGraphic(circle);
-                setTooltip(new Tooltip(tooltipText));
-            }
-        }
     }
 
     private class CurrencyCell extends TableCell<Client, Double> {
@@ -177,11 +125,18 @@ public class ClientListController {
         clientTable.setItems(clientList);
     }
 
+    @FXML
+    public void handleToggleDeleted() {
+        if (mainController != null) {
+            mainController.showDeletedClients();
+        }
+    }
+
     private void filterClients(String query) {
         if (query == null || query.isEmpty()) {
             loadClients();
         } else {
-            clientList = FXCollections.observableArrayList(clientDAO.searchClients(query));
+            clientList = FXCollections.observableArrayList(clientDAO.searchClients(query, false));
             clientTable.setItems(clientList);
         }
     }
@@ -276,7 +231,6 @@ public class ClientListController {
                 if (confirm.showAndWait().get() == ButtonType.OK) {
                     int count = 0;
                     for (Client c : importedClients) {
-                        // Reset ID to let DB generate new one
                         c.setId(0);
                         if (clientDAO.addClient(c)) {
                             count++;
@@ -297,31 +251,30 @@ public class ClientListController {
     }
 
     @FXML
-    public void handlePreviewPdf() {
-        try {
-            AdminDAO adminDAO = new AdminDAO();
-            PreviewDialog dialog = new PreviewDialog(adminDAO.getAdminInfo());
-            dialog.initOwner(clientTable.getScene().getWindow());
-            dialog.showClientList(clientList);
-        } catch (Exception e) {
-            e.printStackTrace();
-            showAlert(bundle.getString("pdf.preview_error"),
-                    MessageFormat.format(bundle.getString("pdf.preview_failed"), e.getMessage()));
-        }
-    }
-
-    @FXML
     public void handleDeleteClient() {
         Client selected = clientTable.getSelectionModel().getSelectedItem();
         if (selected != null) {
+            if (selected.isDeleted()) {
+                showAlert("Déjà supprimé", "Ce client est déjà dans la corbeille.");
+                return;
+            }
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle(bundle.getString("alert.delete_title"));
             String content = MessageFormat.format(bundle.getString("alert.delete_content"),
                     selected.getRaisonSociale());
             alert.setContentText(content);
             if (alert.showAndWait().get() == ButtonType.OK) {
-                clientDAO.deleteClient(selected.getId());
-                loadClients();
+                try {
+                    clientDAO.deleteClient(selected.getId());
+                    loadClients();
+                } catch (java.sql.SQLException e) {
+                    e.printStackTrace();
+                    Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                    errorAlert.setTitle("Deletion Error");
+                    errorAlert.setHeaderText("Could not delete client");
+                    errorAlert.setContentText("Error: " + e.getMessage());
+                    errorAlert.showAndWait();
+                }
             }
         }
     }
@@ -343,19 +296,17 @@ public class ClientListController {
             stage.initOwner(clientTable.getScene().getWindow());
             stage.initModality(Modality.APPLICATION_MODAL);
 
-            // Set icon based on action
             try {
                 String iconPath = (client == null) ? "images/add.png" : "images/modify.png";
                 stage.getIcons().add(new javafx.scene.image.Image(
                         getClass().getResourceAsStream(iconPath)));
             } catch (Exception e) {
-                System.err.println("Could not load form icon: " + e.getMessage());
             }
 
             stage.setScene(new Scene(root));
             stage.showAndWait();
             loadClients();
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

@@ -10,24 +10,14 @@ public class FinancialDAO {
         return DatabaseManager.getConnection();
     }
 
-    private Connection conn;
-
     public FinancialDAO() {
-        try {
-            this.conn = getConnection();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public FinancialDAO(Connection conn) {
-        this.conn = conn;
     }
 
     // Transactions
     public void addTransaction(Transaction t) {
         String sql = "INSERT INTO transactions(client_id, amount, date, notes, type, year_id, payment_type_id, receipt_number) VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
             Year currentYear = SessionContext.getInstance().getCurrentYear();
             int yearId = currentYear != null ? currentYear.getId() : 1;
 
@@ -47,7 +37,8 @@ public class FinancialDAO {
 
     public void updateTransaction(Transaction t) {
         String sql = "UPDATE transactions SET amount = ?, date = ?, notes = ?, type = ?, payment_type_id = ?, receipt_number = ? WHERE id = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setDouble(1, t.getAmount());
             pstmt.setString(2, t.getDate());
             pstmt.setString(3, t.getNotes());
@@ -63,7 +54,8 @@ public class FinancialDAO {
 
     public void deleteTransaction(int id) {
         String sql = "DELETE FROM transactions WHERE id = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, id);
             pstmt.executeUpdate();
         } catch (SQLException e) {
@@ -77,7 +69,8 @@ public class FinancialDAO {
                 : 1;
         String sql = "SELECT * FROM transactions WHERE client_id = ? AND year_id = ? ORDER BY date DESC";
         List<Transaction> list = new ArrayList<>();
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, clientId);
             pstmt.setInt(2, yearId);
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -105,7 +98,8 @@ public class FinancialDAO {
                 ? SessionContext.getInstance().getCurrentYear().getId()
                 : 1;
         String sql = "SELECT SUM(amount) FROM transactions WHERE client_id = ? AND type = ? AND year_id = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, clientId);
             pstmt.setString(2, Transaction.TYPE_PAYMENT);
             pstmt.setInt(3, yearId);
@@ -124,7 +118,8 @@ public class FinancialDAO {
                 ? SessionContext.getInstance().getCurrentYear().getId()
                 : 1;
         String sql = "SELECT SUM(amount) FROM transactions WHERE client_id = ? AND type = ? AND year_id = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, clientId);
             pstmt.setString(2, type);
             pstmt.setInt(3, yearId);
@@ -145,7 +140,8 @@ public class FinancialDAO {
                 : String.valueOf(java.time.LocalDate.now().getYear());
 
         String sql = "SELECT receipt_number FROM transactions WHERE year_id = ? AND receipt_number LIKE ? ORDER BY id DESC LIMIT 1";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, yearId);
             pstmt.setString(2, yearName + "/%");
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -169,7 +165,8 @@ public class FinancialDAO {
 
     public String getLastPaymentDateByClient(int clientId) {
         String sql = "SELECT MAX(date) FROM transactions WHERE client_id = ? AND type = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, clientId);
             pstmt.setString(2, Transaction.TYPE_PAYMENT);
             try (ResultSet rs = pstmt.executeQuery()) {

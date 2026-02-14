@@ -20,9 +20,9 @@
             <!-- Main Navigation Bar -->
             <HBox styleClass="main-nav" alignment="CENTER_LEFT" spacing="10">
                 <HBox alignment="CENTER" spacing="8" style="-fx-padding: 0 10;">
-                    <ImageView fitHeight="40" fitWidth="40" preserveRatio="true">
+                    <ImageView fitHeight="20" fitWidth="20" preserveRatio="true">
                         <image>
-                            <Image url="@images/logo.png"/>
+                            <Image url="@images/logo1.png"/>
                         </image>
                     </ImageView>
                     <Label text="%title" styleClass="title-label-small"/>
@@ -38,8 +38,13 @@
                             <MenuItem text="%nav.add_client" onAction="#handleAddClientFromNav"/>
                             <SeparatorMenuItem/>
                             <MenuItem text="%nav.hidden_clients" onAction="#showHiddenClients"/>
+                            <MenuItem text="%nav.deleted_clients" onAction="#showDeletedClients"/>
                         </items>
                     </MenuButton>
+                    
+
+
+
                     
                     <MenuButton fx:id="paymentsMenu" text="%nav.payments" styleClass="top-nav-button">
                         <items>
@@ -47,8 +52,6 @@
                         </items>
                     </MenuButton>
 
-                    <Button text="%nav.invoices" onAction="#showInvoices" styleClass="top-nav-button"/>
-                    
                     <MenuButton fx:id="yearsMenu" text="%nav.years" styleClass="top-nav-button">
                         <items>
                             <MenuItem text="%nav.manage_years" onAction="#showYearManagement"/>
@@ -58,7 +61,7 @@
                     <MenuButton fx:id="settingsMenu" text="%nav.settings" styleClass="top-nav-button">
                         <items>
                             <MenuItem text="%nav.admin_info" onAction="#showAdminSettings"/>
-                            <MenuItem fx:id="userManagementItem" text="User Management" onAction="#showUserManagement" styleClass="settings-menu-item"/>
+                            <MenuItem fx:id="userManagementItem" text="%nav.user_management" onAction="#showUserManagement" styleClass="settings-menu-item"/>
                             <MenuItem text="%nav.security" onAction="#showSecurity" styleClass="settings-menu-item"/>
                             <SeparatorMenuItem/>
                             <MenuItem fx:id="backupItem" text="%nav.backup" onAction="#handleBackupRestore"/>
@@ -73,19 +76,19 @@
                             <HBox spacing="8" alignment="CENTER">
                                 <ImageView fx:id="userImageView" fitHeight="24" fitWidth="24" preserveRatio="true">
                                     <image>
-                                        <Image url="@images/user.png"/>
+                                        <Image url="@images/add.png"/>
                                     </image>
                                 </ImageView>
-                                <Label fx:id="userNameLabel" text="User" style="-fx-text-fill: white; -fx-font-weight: bold;"/>
+                                <Label fx:id="userNameLabel" text="Utilisateur" style="-fx-text-fill: white; -fx-font-weight: bold;"/>
                             </HBox>
                         </graphic>
                         <items>
-                            <MenuItem text="My Profile" onAction="#showProfile"/>
+                            <MenuItem text="%nav.my_profile" onAction="#showProfile"/>
                             <SeparatorMenuItem/>
-                            <MenuItem text="Logout" onAction="#handleLogout" style="-fx-text-fill: #e74c3c;"/>
+                            <MenuItem text="%user.logout" onAction="#handleLogout" style="-fx-text-fill: #e74c3c;"/>
                         </items>
                     </MenuButton>
-                    <MenuButton fx:id="currentYearMenu" text="Year: ----" styleClass="active-year-label"/>
+                    <MenuButton fx:id="currentYearMenu" text="%nav.year_placeholder" styleClass="active-year-label"/>
                     <Button text="EN" onAction="#switchEnglish" styleClass="lang-button"/>
                     <Button text="FR" onAction="#switchFrench" styleClass="lang-button"/>
                     <Button text="—" onAction="#handleMinimize" styleClass="window-control-button"/>

@@ -9,24 +9,24 @@
       styleClass="content-area" spacing="20">
       
     <HBox alignment="CENTER_LEFT" spacing="20">
-        <Label text="Invoice Aging Report" styleClass="section-header"/>
+        <Label text="%invoice.aging_report" styleClass="section-header"/>
         <Region HBox.hgrow="ALWAYS"/>
         <Button text="%btn.back" onAction="#handleBack" styleClass="button-secondary"/>
     </HBox>
 
     <HBox spacing="10" alignment="CENTER_LEFT">
-        <Button text="Refresh" onAction="#handleRefresh" styleClass="button-primary"/>
-        <Button text="Mark as Paid" onAction="#handleMarkAsPaid" styleClass="button-secondary"/>
+        <Button text="%btn.refresh" onAction="#handleRefresh" styleClass="button-primary"/>
+        <Button text="%btn.mark_paid" onAction="#handleMarkAsPaid" styleClass="button-secondary"/>
     </HBox>
 
     <TableView fx:id="agingTable" VBox.vgrow="ALWAYS">
         <columns>
-            <TableColumn fx:id="numberColumn" text="Number" prefWidth="120"/>
-            <TableColumn fx:id="clientColumn" text="Client" prefWidth="200"/>
-            <TableColumn fx:id="dueDateColumn" text="Due Date" prefWidth="120"/>
-            <TableColumn fx:id="daysOverdueColumn" text="Days Overdue" prefWidth="100"/>
-            <TableColumn fx:id="totalColumn" text="Amount TTC" prefWidth="120"/>
-            <TableColumn fx:id="statusColumn" text="Status" prefWidth="100"/>
+            <TableColumn fx:id="numberColumn" text="%column.number" prefWidth="120"/>
+            <TableColumn fx:id="clientColumn" text="%column.client" prefWidth="200"/>
+            <TableColumn fx:id="dueDateColumn" text="%column.due_date" prefWidth="120"/>
+            <TableColumn fx:id="daysOverdueColumn" text="%column.days_overdue" prefWidth="100"/>
+            <TableColumn fx:id="totalColumn" text="%column.ttc" prefWidth="120"/>
+            <TableColumn fx:id="statusColumn" text="%column.status" prefWidth="100"/>
         </columns>
         <columnResizePolicy>
             <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>

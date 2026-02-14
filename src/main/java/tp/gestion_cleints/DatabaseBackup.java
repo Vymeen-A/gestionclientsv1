@@ -10,7 +10,8 @@ import java.util.Date;
 public class DatabaseBackup {
 
     public static String backup(File destinationDir) throws IOException {
-        File currentDb = new File(DatabaseManager.getDatabasePath());
+        String dbPath = DatabaseManager.getDatabasePath();
+        File currentDb = new File(dbPath);
         if (!currentDb.exists()) {
             throw new IOException("Database file not found at " + currentDb.getAbsolutePath());
         }
@@ -23,7 +24,14 @@ public class DatabaseBackup {
         String backupFileName = "backup_" + timestamp + ".db";
         File backupFile = new File(destinationDir, backupFileName);
 
-        Files.copy(currentDb.toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        // Safe hot backup using SQLite's VACUUM INTO
+        try (java.sql.Connection conn = DatabaseManager.getConnection();
+                java.sql.Statement stmt = conn.createStatement()) {
+            stmt.execute("VACUUM INTO '" + backupFile.getAbsolutePath().replace("\\", "/") + "'");
+        } catch (java.sql.SQLException e) {
+            // Fallback to Files.copy if VACUUM INTO fails (unlikely)
+            Files.copy(currentDb.toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        }
 
         AuditLogger.log("BACKUP", "DATABASE", "SYSTEM", "Manual backup created: " + backupFileName);
 
